@@ -1,43 +1,63 @@
 // region imports
 import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { hideToast } from "../../features/toast/toastSlice";
 // endregion
 
-const Toaster = ({
-  message="",
-  type = "success", // success | error | info | warning
-  duration = 3000,
-  onClose=()=>{},
-}) => {
+// region component
+const Toaster = ({ duration = 3000 }) => {
+  // region hooks
+  const dispatch = useDispatch();
+  const { message, type, visible } = useSelector((state) => state?.toast ?? {});
+  // endregion
+
+  // region auto-hide effect
   useEffect(() => {
-    // timeout for close toaster
+    if (!visible) return;
+
+    // set timeout to auto-hide toast
     const timer = setTimeout(() => {
-      onClose?.();
-    }, duration);
-// clear timeout
+      dispatch?.(hideToast?.());
+    }, duration ?? 3000);
+
     return () => clearTimeout(timer);
-  }, [duration, onClose]);
+  }, [visible, duration, dispatch]);
+  // endregion
 
-  // if no message , then end the function
-  if (!message){
-return null;
-  } 
+  // region guard
+  if (!visible || !message) return null;
+  // endregion
 
-  // region alert types
+  // region alert type mapping
   const alertType = {
     success: "alert-success",
     error: "alert-danger",
     info: "alert-info",
     warning: "alert-warning",
-  }[type];
+  }[type ?? "info"] ?? "alert-info";
   // endregion
 
+  // region render
   return (
-    <div className={`alert ${alertType} alert-dismissible fade show position-fixed top-0 end-0 m-3`} role="alert" style={{ zIndex: 1050 }}>
+    <div
+      className={`alert ${alertType} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow`}
+      role="alert"
+      style={{ zIndex: 1050 }}
+    >
+      {/* message content */}
       {message}
-      <button type="button" className="btn-close" aria-label="Close" onClick={onClose}></button>
+
+      {/* close button */}
+      <button
+        type="button"
+        className="btn-close"
+        onClick={() => dispatch?.(hideToast?.())}
+      />
     </div>
   );
+  // endregion
 };
+// endregion
 
 // region exports
 export default Toaster;

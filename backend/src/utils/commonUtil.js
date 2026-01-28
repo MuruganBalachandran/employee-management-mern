@@ -12,6 +12,21 @@ const PASSWORD_REGEX =
 // Proper email regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+ const VALID_DEPARTMENTS = [
+  "HR",
+  "Sales",
+  "Marketing",
+  "Tester",
+  "Frontend Developer",
+  "Backend Developer",
+  "Full Stack Developer",
+  "Machine Learning",
+  "Deep Learning",
+  "Network",
+  "Cyber Security",
+  "DevOps"
+];
+
 // endregion
 
 // region exports
@@ -21,5 +36,6 @@ module.exports = {
   ZIP_REGEX,
   PASSWORD_REGEX,
   EMAIL_REGEX,
+  VALID_DEPARTMENTS,
 };
 // endregion

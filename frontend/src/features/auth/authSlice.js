@@ -6,11 +6,12 @@ import {
   registerUser,
   getCurrentUser,
 } from "../../services/authService";
+import { showToast } from "../toast/toastSlice";
 // endregion
 
 // region initial state
 const initialState = {
-  user: null,        // currently logged-in user
+  user: null,
   loading: false,
   error: null,
   isAuthenticated: false,
@@ -20,72 +21,87 @@ const initialState = {
 
 // region async thunks
 
-// login
+// region login
 export const login = createAsyncThunk(
   "auth/login",
-  async (credentials, { rejectWithValue }) => {
+  async (credentials = {}, { dispatch, rejectWithValue }) => {
+    /* Attempt user login and store token */
     try {
-      const res = await loginUser(credentials);
-      // set token correctly
-      localStorage.setItem("token", res?.data?.data?.token ?? "");
-      return res?.data?.data?.user ?? null;
+      const res = await loginUser(credentials ?? {});
+      const token = res?.data?.data?.token ?? "";
+      const user = res?.data?.data?.user ?? null;
+
+      if (token) localStorage?.setItem("token", token);
+
+      dispatch?.(showToast?.({ message: "Logged in successfully!", type: "success" }));
+      return user;
     } catch (err) {
-      return rejectWithValue(
-        err?.response?.data?.message ?? "Login failed"
-      );
+      const message = err?.response?.data?.message ?? "Login failed";
+      dispatch?.(showToast?.({ message, type: "error" }));
+      return rejectWithValue?.(message);
     }
   }
 );
+// endregion
 
-
+// region register
 export const register = createAsyncThunk(
   "auth/register",
-  async (data, { rejectWithValue }) => {
+  async (data = {}, { dispatch, rejectWithValue }) => {
+    /* Register new user */
     try {
-      const res = await registerUser(data);
-      return res?.data?.data?.user ?? null; // only return user
+      const res = await registerUser(data ?? {});
+      const user = res?.data?.data?.user ?? null;
+
+      dispatch?.(showToast?.({ message: "Registered successfully!", type: "success" }));
+      return user;
     } catch (err) {
-      return rejectWithValue(
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        "Registration failed"
-      );
+      const message =
+        err?.response?.data?.message ??
+        err?.response?.data?.error ??
+        "Registration failed";
+
+      dispatch?.(showToast?.({ message, type: "error" }));
+      return rejectWithValue?.(message);
     }
   }
 );
+// endregion
 
-
-
-// logout
+// region logout
 export const logout = createAsyncThunk(
   "auth/logout",
-  async (_, { rejectWithValue }) => {
+  async (_ = null, { dispatch, rejectWithValue }) => {
+    /* Logout user and clear token */
     try {
-      await logoutUser();
-      localStorage.removeItem("token");
+      await logoutUser?.();
+      localStorage?.removeItem?.("token");
+
+      dispatch?.(showToast?.({ message: "Logged out", type: "info" }));
       return null;
     } catch (err) {
-      return rejectWithValue(
-        err?.response?.data?.message ?? "Logout failed"
-      );
+      const message = err?.response?.data?.message ?? "Logout failed";
+      dispatch?.(showToast?.({ message, type: "error" }));
+      return rejectWithValue?.(message);
     }
   }
 );
+// endregion
 
-// fetch current user
+// region fetchCurrentUser
 export const fetchCurrentUser = createAsyncThunk(
   "auth/fetchCurrentUser",
-  async (_, { rejectWithValue }) => {
+  async (_ = null, { rejectWithValue }) => {
+    /* Fetch logged-in user from backend */
     try {
-      const res = await getCurrentUser();
+      const res = await getCurrentUser?.();
       return res?.data ?? null;
     } catch (err) {
-      return rejectWithValue(
-        err?.response?.data?.message ?? "Failed to fetch user"
-      );
+      return rejectWithValue?.(err?.response?.data?.message ?? "Failed to fetch user");
     }
   }
 );
+// endregion
 
 // endregion
 
@@ -94,82 +110,109 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    clearAuthError: (state) => {
+    // region clearAuthError
+    clearAuthError: (state = {}) => {
+      /* Clear authentication error */
       state.error = null;
     },
+    // endregion
+
+    // region setAuthChecked
+    setAuthChecked: (state = {}) => {
+      /* Mark auth check as completed */
+      state.authChecked = true;
+    },
+    // endregion
   },
   extraReducers: (builder) => {
     builder
-      // login
-      .addCase(login.pending, (state) => {
+
+      // region login reducers
+      .addCase(login?.pending, (state = {}) => {
+        /* Login loading start */
         state.loading = true;
         state.error = null;
       })
-      .addCase(login.fulfilled, (state, action) => {
+      .addCase(login?.fulfilled, (state = {}, action = {}) => {
+        /* Login success */
         state.loading = false;
-        state.user = action.payload ?? null;
-        state.isAuthenticated = !!action.payload;
+        state.user = action?.payload ?? null;
+        state.isAuthenticated = !!action?.payload;
       })
-      .addCase(login.rejected, (state, action) => {
+      .addCase(login?.rejected, (state = {}, action = {}) => {
+        /* Login failed */
         state.loading = false;
-        state.error = action.payload ?? "Unknown error";
+        state.error = action?.payload ?? "Unknown error";
         state.isAuthenticated = false;
       })
+      // endregion
 
-      // register
-      .addCase(register.pending, (state) => {
+      // region register reducers
+      .addCase(register?.pending, (state = {}) => {
+        /* Register loading start */
         state.loading = true;
         state.error = null;
       })
-      .addCase(register.fulfilled, (state, action) => {
+      .addCase(register?.fulfilled, (state = {}, action = {}) => {
+        /* Register success */
         state.loading = false;
-        state.user = action.payload ?? null;
-        state.isAuthenticated = !!action.payload;
+        state.user = action?.payload ?? null;
+        state.isAuthenticated = !!action?.payload;
       })
-      .addCase(register.rejected, (state, action) => {
+      .addCase(register?.rejected, (state = {}, action = {}) => {
+        /* Register failed */
         state.loading = false;
-        state.error = action.payload ?? "Unknown error";
+        state.error = action?.payload ?? "Unknown error";
         state.isAuthenticated = false;
       })
+      // endregion
 
-      // logout
-      .addCase(logout.pending, (state) => {
+      // region logout reducers
+      .addCase(logout?.pending, (state = {}) => {
+        /* Logout loading start */
         state.loading = true;
         state.error = null;
       })
-      .addCase(logout.fulfilled, (state) => {
+      .addCase(logout?.fulfilled, (state = {}) => {
+        /* Logout success */
         state.loading = false;
         state.user = null;
         state.isAuthenticated = false;
       })
-      .addCase(logout.rejected, (state, action) => {
+      .addCase(logout?.rejected, (state = {}, action = {}) => {
+        /* Logout failed */
         state.loading = false;
-        state.error = action.payload ?? "Unknown error";
+        state.error = action?.payload ?? "Unknown error";
       })
+      // endregion
 
-      // fetch current user
-      .addCase(fetchCurrentUser.pending, (state) => {
+      // region fetchCurrentUser reducers
+      .addCase(fetchCurrentUser?.pending, (state = {}) => {
+        /* Fetch user loading */
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchCurrentUser.fulfilled, (state, action) => {
+      .addCase(fetchCurrentUser?.fulfilled, (state = {}, action = {}) => {
+        /* Fetch user success */
         state.loading = false;
-        state.user = action.payload ?? null;
-          state.isAuthenticated = !!action.payload;
-         state.authChecked = true;
+        state.user = action?.payload ?? null;
+        state.isAuthenticated = !!action?.payload;
+        state.authChecked = true;
       })
-      .addCase(fetchCurrentUser.rejected, (state, action) => {
+      .addCase(fetchCurrentUser?.rejected, (state = {}, action = {}) => {
+        /* Fetch user failed */
         state.loading = false;
-        state.error = action.payload ?? "Unknown error";
         state.user = null;
         state.isAuthenticated = false;
-         state.authChecked = true;
+        state.error = action?.payload ?? "Unknown error";
+        state.authChecked = true;
       });
+    // endregion
   },
 });
 // endregion
 
 // region exports
-export const { clearAuthError } = authSlice.actions;
-export default authSlice.reducer;
+export const { clearAuthError, setAuthChecked } = authSlice?.actions ?? {};
+export default authSlice?.reducer;
 // endregion

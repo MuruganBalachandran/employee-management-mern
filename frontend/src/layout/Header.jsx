@@ -10,42 +10,44 @@ const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector((state) => state?.auth?.user ?? null);
-  console.log(user)
   // endregion
+
   // region handleLogout
   const handleLogout = () => {
     dispatch(logout());
     navigate("/login");
   };
-  // endrgion
+  // endregion
 
   return (
-    <header className='navbar navbar-expand-lg navbar-dark bg-primary'>
-      <div className='container'>
-        <Link className='navbar-brand' to='/'>
+    <header className="navbar navbar-expand-lg navbar-dark bg-primary">
+      <div className="container">
+        {/* Home link */}
+        <Link className="navbar-brand" to="/">
           Employee Management
         </Link>
-        <div className='collapse navbar-collapse justify-content-end'>
-          {user ? (
-            <div className='d-flex align-items-center gap-2'>
-              <span className="text-white me-2">Hi, {user?.data?.user?.name}</span>
-              <button
-                className='btn btn-outline-light btn-sm'
-                onClick={handleLogout}
-              >
-                Logout
-              </button>
-            </div>
-          ) : (
-            <div className='d-flex gap-2'>
-              <Link className='btn btn-outline-light btn-sm' to='/login'>
-                Login
+
+        <div className="collapse navbar-collapse justify-content-end">
+          <ul className="navbar-nav d-flex align-items-center gap-2">
+            {/* Add Employee nav link */}
+            <li className="nav-item">
+              <Link to="/employees/create" className="nav-link text-light">
+                Add Employee
               </Link>
-              <Link className='btn btn-outline-light btn-sm' to='/register'>
-                Register
-              </Link>
-            </div>
-          )}
+            </li>
+
+            {/* Logout button */}
+            {user && (
+              <li className="nav-item">
+                <button
+                  className="btn btn-outline-light btn-sm"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </button>
+              </li>
+            )}
+          </ul>
         </div>
       </div>
     </header>

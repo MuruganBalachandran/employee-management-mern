@@ -1,11 +1,31 @@
-import React from 'react'
+// region imports
+import React, { useState } from "react";
+import EmployeeFilters from "../../components/employees/EmployeeFilters";
+import EmployeeList from "../../components/employees/EmployeeList";
+// endregion
 
+// region Home component
 const Home = () => {
-  return (
-    <div>
-      
-    </div>
-  )
-}
+  // region state
+  const [filters, setFilters] = useState({ search: "", department: "" });
+  // endregion
 
-export default Home
+  // region handleFilter
+  const handleFilter = (newFilters = {}) => {
+    /* Update employee filter state from child component */
+    setFilters(newFilters ?? {});
+  };
+  // endregion
+
+  return (
+    <div className="container mt-4">
+      <EmployeeFilters onFilter={handleFilter} />
+      <EmployeeList filters={filters ?? {}} />
+    </div>
+  );
+};
+// endregion
+
+// region exports
+export default Home;
+// endregion

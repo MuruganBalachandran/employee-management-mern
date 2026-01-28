@@ -25,6 +25,8 @@ const validateRegister = (data = {}) => {
     errors.email = "Email too long";
   } else if (!EMAIL_REGEX.test(email)) {
     errors.email = "Invalid email format";
+  } else if (!email.endsWith("@spanadmin.com")) {
+    errors.email = "Admin email must end with @spanadmin.com";
   }
 
   // password
@@ -48,10 +50,13 @@ const validateLogin = (data = {}) => {
   const email = data?.email?.trim?.() ?? "";
   const password = data?.password ?? "";
 
+
   if (!email) {
     errors.email = "Email is required";
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errors.email = "Invalid email format";
+  } else if (!email.endsWith("@spanadmin.com")) {
+    errors.email = "Admin email must end with @spanadmin.com";
   }
 
   if (!password) {

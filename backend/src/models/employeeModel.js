@@ -16,11 +16,24 @@ const employeeSchema = new mongoose.Schema(
       unique: true,
       default: "",
     },
-    department: {
-      type: String,
-      required: true,
-      default: "",
-    },
+department: {
+  type: String,
+  enum: [ 
+     "HR",
+  "Sales",
+  "Marketing",
+  "Tester",
+  "Frontend Developer",
+  "Backend Developer",
+  "Full Stack Developer",
+  "Machine Learning",
+  "Deep Learning",
+  "Network",
+  "Cyber Security",
+  "DevOps"],
+  required: true,
+  default:"Others"
+},
     phone: {
       type: String,
       required: true,

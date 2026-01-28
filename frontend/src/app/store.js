@@ -1,14 +1,17 @@
 // region imports
 import { configureStore } from "@reduxjs/toolkit";
+
 import employeeReducer from "../features/employees/employeeSlice";
 import authReducer from "../features/auth/authSlice";
+import toastReducer from "../features/toast/toastSlice";
 // endregion
 
-// region store
+// region store configuration
 const store = configureStore({
   reducer: {
     employees: employeeReducer,
     auth: authReducer,
+    toast: toastReducer,
   },
 });
 // endregion

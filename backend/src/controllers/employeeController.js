@@ -13,51 +13,78 @@ const {
 
 // region create employee
 const addEmployee = asyncHandler(async (req, res) => {
-    const {
+  const {
     name = "",
     email = "",
     department = "",
     phone = "",
-    address : {
-      line1 = "",
-      line2 = "",
-      city = "",
-      state = "",
-      zip = "",
-    },
-  } = req?.body ?? {};
+    address: { line1 = "", line2 = "", city = "", state = "", zip = "" } = {},
+  } = req.body ?? {};
 
   const data = { name, email, department, phone, address: { line1, line2, city, state, zip } };
-
   const userId = req?.user?._id ?? "";
 
-  const employee = await createEmployee({ ...data, createdBy: userId });
-  return apiResponse(
-    res,
-    STATUS_CODES.CREATED,
-    true,
-    MESSAGES.EMPLOYEE_CREATED ?? "Employee created successfully",
-    { employee },
-  );
-});
-// endregion
+  try {
+    const employee = await createEmployee({ ...data, createdBy: userId });
+    return apiResponse(
+      res,
+      STATUS_CODES.CREATED,
+      true,
+      MESSAGES.EMPLOYEE_CREATED ?? "Employee created successfully",
+      { employee },
+    );
+  } catch (err) {
+    // Duplicate key error
+    if (err.code === 11000 && err.keyValue?.email) {
+      return apiResponse(
+        res,
+        STATUS_CODES.BAD_REQUEST,
+        false,
+        "Validation failed",
+        null,
+        { email: "Email already exists" } // structured error
+      );
+    }
 
+    // Any other error
+    return apiResponse(
+      res,
+      STATUS_CODES.SERVER_ERROR,
+      false,
+      err.message || "Failed to create employee",
+    );
+  }
+});
+
+// endregion
 // region list employees
 const listEmployees = asyncHandler(async (req, res) => {
   const userId = req?.user?._id ?? "";
-  const { skip = 0, limit = 20 } = req?.query ?? {};
-  const employees = await getAllEmployees(
-    userId,
-    {},
-    Number(skip),
-    Number(limit),
-  );
+  const skip = Number(req.query.skip) || 0;
+  const limit = Math.min(Number(req.query.limit) || 20, 100);
+  const search = req.query.search || "";
+  const department = req.query.department || "";
+
+  const filter = { createdBy: userId, isDeleted: false };
+
+  // Apply search filter
+  if (search) {
+    filter.name = { $regex: search, $options: "i" }; // case-insensitive
+  }
+
+  // Apply department filter
+  if (department) {
+    filter.department = department; // exact match
+  }
+
+  const { count, items } = await getAllEmployees(filter, skip, limit);
+
   return apiResponse(
     res,
     STATUS_CODES.SUCCESS,
     true,
     MESSAGES.EMPLOYEES_FETCHED ?? "Employees fetched successfully",
-    employees,
+    { count, items }
   );
 });
 // endregion

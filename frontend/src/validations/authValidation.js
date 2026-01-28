@@ -14,8 +14,8 @@ export const nameValidation = (name = "") => {
 };
 // endregion
 
-// region email validation (strong RFC-style)
-export const emailValidation = (email = "") => {
+// region email validation (strong RFC-style + domain check)
+export const emailValidation = (email = "", type = "admin") => {
   const trimmed = email.trim();
 
   if (!trimmed) {
@@ -26,13 +26,19 @@ export const emailValidation = (email = "") => {
   const regex =
     /^(?!.*\.\.)(?!.*\.$)(?!^\.)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-  if (!regex.test(trimmed)) {
-    return "Enter a valid email address (example: john@example.com)";
+  // Domain check
+  const domain = trimmed.split("@")[1] || "";
+  if (type === "admin" && domain !== "spanadmin.com") {
+    return "Admin email must end with @spanadmin.com";
   }
+  // if (type === "employee" && domain !== "spanemployee.com") {
+  //   return "Employee email must end with @spanemployee.com";
+  // }
 
   return "";
 };
 // endregion
+
 
 
 // region password validation

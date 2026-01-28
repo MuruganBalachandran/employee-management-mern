@@ -4,6 +4,7 @@ const {
   PHONE_REGEX,
   ZIP_REGEX,
   EMAIL_REGEX,
+  VALID_DEPARTMENTS
 } = require("../utils/commonUtil");
 // endregion
 
@@ -28,17 +29,20 @@ const validateEmployee = (data = {}) => {
   }
 
   // email
-  if (!email) {
-    errors.email = "Email is required";
-  } else if (!EMAIL_REGEX.test(email)) {
-    errors.email = "Invalid email format";
-  }
+if (!email) {
+  errors.email = "Email is required";
+} else if (!EMAIL_REGEX.test(email)) {
+  errors.email = "Invalid email format";
+} else if (!email.endsWith("@spanemployee.com")) {
+  errors.email = "Employee email must end with @spanemployee.com";
+}
 
-  // department
-  if (!department) {
-    errors.department = "Department is required";
-  }
 
+if (!department) {
+  errors.department = "Department is required";
+} else if (!VALID_DEPARTMENTS.includes(department)) {
+  errors.department = "Invalid department";
+}
   // phone
   if (!phone) {
     errors.phone = "Phone is required";
@@ -97,13 +101,15 @@ const validateEmployeeUpdate = (data = {}) => {
     }
   }
 
-  // Department validation
-  if (data?.department !== undefined) {
-    const dept = data.department?.trim?.() ?? "";
-    if (!dept) {
-      errors.department = "Department cannot be empty";
-    }
+// Department validation
+if (data?.department !== undefined) {
+  const dept = data.department?.trim?.() ?? "";
+  if (!dept) {
+    errors.department = "Department cannot be empty";
+  } else if (!VALID_DEPARTMENTS.includes(dept)) {
+    errors.department = "Invalid department";
   }
+}
 
   // Address validation
   if (data?.address !== undefined) {
@@ -149,3 +155,4 @@ const validateEmployeeUpdate = (data = {}) => {
 
 // region exports
 module.exports = { validateEmployee, validateEmployeeUpdate };
+// endregion

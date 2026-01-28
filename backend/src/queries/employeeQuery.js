@@ -16,24 +16,29 @@ const getEmployeeById = async (id = "") => {
   return await Employee.findOne({ _id: id, isDeleted: false }).lean();
 };
 
-// get all employees
 const getAllEmployees = async (filter = {}, skip = 0, limit = 20) => {
   const query = { isDeleted: false, ...filter };
   const [count, items] = await Promise.all([
     Employee.countDocuments(query),
-    Employee.find(query).skip(Math.max(skip, 0)).limit(Math.min(limit, 100)).lean(),
+    Employee.find(query)
+      .skip(Math.max(skip, 0))
+      .limit(Math.min(limit, 100))
+      .lean(),
   ]);
   return { count, items };
 };
 
-// update employee by id
-const updateEmployeeById = async (id = "", data = {}) => {
+
+// region update employee by id
+const updateEmployeeById = async (id = "", userId = "", data = {}) => {
   return await Employee.findOneAndUpdate(
-    { _id: id, isDeleted: false },
-    data,
-    { new: true }
+    { _id: id, createdBy: userId, isDeleted: false }, // secure
+    { $set: data },
+    { new: true, runValidators: true }
   ).lean();
 };
+// endregion
+
 
 // delete employee by id
 const deleteEmployeeById = async (id = "") => {
