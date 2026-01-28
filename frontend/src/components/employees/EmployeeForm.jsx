@@ -21,28 +21,28 @@ const EmployeeForm = ({ initialData = {}, onSubmit = () => {} }) => {
 
   // region form state
   const [form, setForm] = useState({
-    name: "vignesh",
+    // name: "",
+    // email: "",
+    // department: "",
+    // phone: "",
+    // address: {
+    //   line1: "",
+    //   line2: "",
+    //   city: "",
+    //   state: "",
+    //   zip: "",
+    // },
+       name: "vignesh",
     email: "vignesh@spanemployee.com",
     department: "",
     phone: "9999999999",
     address: {
       line1: "sssss",
-      line2: "",
+      line2: "Full Stack Developer",
       city: "ccccc",
       state: "cccc",
       zip: "666666",
     },
-    //    name: "vignesh",
-    // email: "vignesh@spanemployee.com",
-    // department: "",
-    // phone: "9999999999",
-    // address: {
-    //   line1: "sssss",
-    //   line2: "",
-    //   city: "ccccc",
-    //   state: "cccc",
-    //   zip: "666666",
-    // },
   });
   const [errors, setErrors] = useState({});
   // endregion

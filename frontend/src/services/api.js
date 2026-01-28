@@ -4,8 +4,8 @@ import axios from "axios";
 
 // region axios instance
 const api = axios.create({
-  baseURL: "http://localhost:3000/api", 
-  withCredentials: true, // important if backend uses cookies
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api", 
+  withCredentials: true, 
 });
 // endregion
 

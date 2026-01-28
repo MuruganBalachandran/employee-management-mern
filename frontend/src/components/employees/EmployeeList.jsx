@@ -62,17 +62,13 @@ const EmployeeList = ({ filters = {}, onTotalUpdate = () => {} }) => {
     setPage(newPage);
   };
   // endregion
-
-  // region handleDelete
+  // region delete
   const handleDelete = async (id = "") => {
     if (!window?.confirm?.("Are you sure you want to delete this employee?"))
       return;
 
     try {
-      // Delete employee via Redux thunk
-      await dispatch(removeEmployee(id))?.unwrap?.();
-
-      // Show success toast
+      await dispatch(removeEmployee(id)).unwrap();
       dispatch(
         showToast({
           message: "Employee deleted successfully",
@@ -80,8 +76,25 @@ const EmployeeList = ({ filters = {}, onTotalUpdate = () => {} }) => {
         }),
       );
 
-      // Optionally update total count locally
-      onTotalUpdate?.((prevCount) => Math.max((prevCount ?? 1) - 1, 0));
+      // Fetch employees again
+      const res = await dispatch(
+        getEmployees({
+          skip: (page - 1) * limit,
+          limit,
+          ...(filters ?? {}),
+        }),
+      ).unwrap();
+
+      // Calculate total pages after deletion
+      const newTotalPages = Math.ceil((res?.count ?? 0) / limit);
+
+      // If current page is now out of range, go back one page
+      if (page > newTotalPages && newTotalPages > 0) {
+        setPage(newTotalPages);
+      }
+
+      // Update total for parent
+      onTotalUpdate?.(res?.count ?? 0);
     } catch (err) {
       dispatch(
         showToast({
