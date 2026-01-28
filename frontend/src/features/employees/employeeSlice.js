@@ -26,23 +26,21 @@ const initialState = {
 export const getEmployees = createAsyncThunk(
   "employees/getEmployees",
   async (
-    { skip = 0, limit = 5, search = "", department = "" } = {},
+    { skip = 0, limit = 5, search = "", department = "", ignoreFilters = false } = {},
     { rejectWithValue } = {}
   ) => {
-    /* Fetch employees list with filters */
     try {
-      const res = await fetchEmployees?.({ skip, limit, search, department } ?? {});
+      const res = await fetchEmployees({ skip, limit, search, department, ignoreFilters });
       return {
         items: res?.data?.data?.items ?? [],
         count: res?.data?.data?.count ?? 0,
       };
     } catch (err) {
-      return rejectWithValue?.(
-        err?.response?.data?.message ?? "Failed to fetch employees"
-      );
+      return rejectWithValue(err?.response?.data?.message ?? "Failed to fetch employees");
     }
   }
 );
+
 // endregion
 
 // region getEmployee

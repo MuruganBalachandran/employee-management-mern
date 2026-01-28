@@ -9,11 +9,14 @@ const { findUserById } = require("../queries/authQuery");
 
 // region auth middleware
 const auth = asyncHandler(async (req, res, next) => {
+  // headers
   const authHeader = req?.headers?.authorization ?? "";
+  // extract token from headers
   const token = authHeader?.startsWith("Bearer ")
     ? authHeader.split(" ")[1]
     : null;
 
+    // if not token, send error
   if (!token) {
     return apiResponse(
       res,
@@ -23,6 +26,7 @@ const auth = asyncHandler(async (req, res, next) => {
     );
   }
 
+  // verify token
    const decoded = verifyToken(token);
   if (!decoded?.id) throw new Error("Token invalid");
 

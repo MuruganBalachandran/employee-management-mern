@@ -4,18 +4,19 @@ const Employee = require("../models/employeeModel");
 
 // region employee queries
 
-// create employee
+//region create employee
 const createEmployee = async (data = {}) => {
   const employee = new Employee(data);
   await employee.save();
   return employee.toObject?.();
 };
 
-// get employee by id
+//region get employee by id
 const getEmployeeById = async (id = "") => {
   return await Employee.findOne({ _id: id, isDeleted: false }).lean();
 };
 
+// region get all employees
 const getAllEmployees = async (filter = {}, skip = 0, limit = 20) => {
   const query = { isDeleted: false, ...filter };
   const [count, items] = await Promise.all([
@@ -27,12 +28,12 @@ const getAllEmployees = async (filter = {}, skip = 0, limit = 20) => {
   ]);
   return { count, items };
 };
-
+// endregion
 
 // region update employee by id
 const updateEmployeeById = async (id = "", userId = "", data = {}) => {
   return await Employee.findOneAndUpdate(
-    { _id: id, createdBy: userId, isDeleted: false }, // secure
+    { _id: id, createdBy: userId, isDeleted: false }, 
     { $set: data },
     { new: true, runValidators: true }
   ).lean();
@@ -40,7 +41,7 @@ const updateEmployeeById = async (id = "", userId = "", data = {}) => {
 // endregion
 
 
-// delete employee by id
+//region delete employee by id
 const deleteEmployeeById = async (id = "") => {
   return await Employee.findOneAndUpdate(
     { _id: id },

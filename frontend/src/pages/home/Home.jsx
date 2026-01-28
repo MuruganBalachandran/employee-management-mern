@@ -1,31 +1,34 @@
 // region imports
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import EmployeeFilters from "../../components/employees/EmployeeFilters";
 import EmployeeList from "../../components/employees/EmployeeList";
+import { getEmployees } from "../../features/employees/employeeSlice";
 // endregion
 
-// region Home component
 const Home = () => {
-  // region state
+  const dispatch = useDispatch();
   const [filters, setFilters] = useState({ search: "", department: "" });
-  // endregion
+  const [showFilters, setShowFilters] = useState(false);
 
-  // region handleFilter
+  useEffect(() => {
+    // Fetch only total count without filters
+    dispatch(getEmployees({ skip: 0, limit: 0, ignoreFilters: true }))
+      .unwrap()
+      .then((res) => setShowFilters((res?.count ?? 0) > 0))
+      .catch(() => setShowFilters(false));
+  }, [dispatch]);
+
   const handleFilter = (newFilters = {}) => {
-    /* Update employee filter state from child component */
     setFilters(newFilters ?? {});
   };
-  // endregion
 
   return (
     <div className="container mt-4">
-      <EmployeeFilters onFilter={handleFilter} />
-      <EmployeeList filters={filters ?? {}} />
+      {showFilters && <EmployeeFilters onFilter={handleFilter} />}
+      <EmployeeList filters={filters} />
     </div>
   );
 };
-// endregion
 
-// region exports
 export default Home;
-// endregion

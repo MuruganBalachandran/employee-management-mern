@@ -28,12 +28,14 @@ const PasswordRules = ({ password = "" }) => {
      */
     return (
       <div className="d-flex align-items-center mb-1">
+        {/* icon */}
         <span
           className="me-2"
           style={{ color: valid ? "#28a745" : "#dc3545" }}
         >
           {valid ? <FaCheck /> : <FaTimes />}
         </span>
+        {/* text */}
         <span style={{ color: valid ? "#28a745" : "#dc3545" }}>
           {label ?? ""}
         </span>

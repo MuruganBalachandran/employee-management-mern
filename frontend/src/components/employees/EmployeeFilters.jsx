@@ -12,7 +12,10 @@ const EmployeeFilters = ({ onFilter = () => {} }) => {
 
   // region handleApply
   const handleApply = () => {
-    onFilter?.({ search: search?.trim?.() ?? "", department: department ?? "" });
+    onFilter?.({
+      search: search?.trim?.() ?? "",
+      department: department ?? "",
+    });
   };
   // endregion
 
@@ -25,23 +28,23 @@ const EmployeeFilters = ({ onFilter = () => {} }) => {
   // endregion
 
   return (
-    <div className="d-flex gap-2 align-items-center mb-3 flex-wrap">
+    <div className='d-flex gap-2 align-items-center mb-3 flex-wrap'>
       {/* Search input */}
       <input
-        type="text"
-        className="form-control"
-        placeholder="Search by name..."
+        type='text'
+        className='form-control'
+        placeholder='Search by name...'
         value={search ?? ""}
         onChange={(e) => setSearch(e?.target?.value ?? "")}
       />
 
       {/* Department dropdown */}
       <select
-        className="form-select"
+        className='form-select'
         value={department ?? ""}
         onChange={(e) => setDepartment(e?.target?.value ?? "")}
       >
-        <option value="">All Departments</option>
+        <option value=''>All Departments</option>
         {VALID_DEPARTMENTS?.map?.((dept) => (
           <option key={dept} value={dept}>
             {dept}
@@ -50,12 +53,12 @@ const EmployeeFilters = ({ onFilter = () => {} }) => {
       </select>
 
       {/* Apply filters */}
-      <button className="btn btn-primary" onClick={handleApply}>
+      <button className='btn btn-primary' onClick={handleApply}>
         Filter
       </button>
 
       {/* Clear filters */}
-      <button className="btn btn-outline-secondary" onClick={handleClear}>
+      <button className='btn btn-outline-secondary' onClick={handleClear}>
         Clear
       </button>
     </div>

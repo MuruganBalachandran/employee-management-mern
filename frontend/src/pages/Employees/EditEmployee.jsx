@@ -71,7 +71,7 @@ const EditEmployee = () => {
       {/* back button */}
       <BackButton />
       <h3>Edit Employee</h3>
-      {/* form to create employee */}
+      {/* form to edit employee */}
       <EmployeeForm initialData={employeeData} onSubmit={handleUpdate} />
     </div>
   );

@@ -11,7 +11,7 @@ const apiResponse = (
   if (!status) {
     console.error("API Error:", error ?? message ?? "An error occurred");
   }
-
+// region payload
   const responsePayload = {
     statusCode,
     status,
@@ -19,9 +19,11 @@ const apiResponse = (
     data: status ? (data ?? null) : undefined, // show data only if success
     error: !status ? error ?? message ?? "An error occurred" : undefined, // show error if failure
   };
-
+// endregion
   
+// region send response
   return res.status(statusCode).json(responsePayload);
+  // endregion
 };
 // endregion
 

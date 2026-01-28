@@ -4,14 +4,14 @@ const User = require("../models/userModel");
 
 // region auth queries
 
-//  Used during login 
+// region Used during login 
 const findUserByEmail = async (email = "") => {
   return await User.findOne({ email: email?.toLowerCase?.() ?? "" })
     .select("+password") 
     .exec();
 };
 
-//  Register user
+// region Register user
 const createUser = async ({ name = "", email = "", password = "" } = {}) => {
   const user = new User({ name, email, password });
   await user.save();
@@ -21,7 +21,7 @@ const createUser = async ({ name = "", email = "", password = "" } = {}) => {
   return userObj;
 };
 
-//  Get user profile 
+// region Get user profile 
 const findUserById = async (id = "") => {
   return await User.findById(id).lean(); // password already excluded
 };

@@ -10,7 +10,7 @@ import {
   departmentValidation,
   phoneValidation,
   addressValidation,
-  VALID_DEPARTMENTS
+  VALID_DEPARTMENTS,
 } from "../../validations/employeeValidation";
 // endregion
 
@@ -21,17 +21,28 @@ const EmployeeForm = ({ initialData = {}, onSubmit = () => {} }) => {
 
   // region form state
   const [form, setForm] = useState({
-    name: "",
-    email: "",
+    name: "vignesh",
+    email: "vignesh@spanemployee.com",
     department: "",
-    phone: "",
+    phone: "9999999999",
     address: {
-      line1: "",
+      line1: "sssss",
       line2: "",
-      city: "",
-      state: "",
-      zip: "",
+      city: "ccccc",
+      state: "cccc",
+      zip: "666666",
     },
+    //    name: "vignesh",
+    // email: "vignesh@spanemployee.com",
+    // department: "",
+    // phone: "9999999999",
+    // address: {
+    //   line1: "sssss",
+    //   line2: "",
+    //   city: "ccccc",
+    //   state: "cccc",
+    //   zip: "666666",
+    // },
   });
   const [errors, setErrors] = useState({});
   // endregion
@@ -66,7 +77,7 @@ const EmployeeForm = ({ initialData = {}, onSubmit = () => {} }) => {
 
       // set values
       setForm((prev) => ({ ...prev, address: updatedAddress }));
-// set errors
+      // set errors
       setErrors((prevErrors) => {
         const newErrors = { ...prevErrors };
         if (addressErrors?.[key])
@@ -81,9 +92,9 @@ const EmployeeForm = ({ initialData = {}, onSubmit = () => {} }) => {
         case "name":
           fieldError = nameValidation?.(value) ?? "";
           break;
-     case "email":
-  fieldError = emailValidation?.(value, "employee") ?? "";
-  break;
+        case "email":
+          fieldError = emailValidation?.(value, "employee") ?? "";
+          break;
         case "department":
           fieldError = departmentValidation?.(value) ?? "";
           break;
@@ -111,7 +122,9 @@ const EmployeeForm = ({ initialData = {}, onSubmit = () => {} }) => {
 
     if (Object.keys(validationErrors ?? {}).length > 0) {
       setErrors(validationErrors);
-      dispatch?.(showToast({ message: "Please fix the errors", type: "error" }));
+      dispatch?.(
+        showToast({ message: "Please fix the errors", type: "error" }),
+      );
       return;
     }
 
@@ -151,7 +164,10 @@ const EmployeeForm = ({ initialData = {}, onSubmit = () => {} }) => {
         onChange={(e) => handleChange("department", e?.target?.value)}
         error={errors?.department}
         select
-        options={[{ value: "", label: "Select Department" }, ...VALID_DEPARTMENTS?.map?.(dept => ({ value: dept, label: dept }))]}
+        options={[
+          { value: "", label: "Select Department" },
+          ...VALID_DEPARTMENTS?.map?.((dept) => ({ value: dept, label: dept })),
+        ]}
       />
 
       {/* Phone input */}

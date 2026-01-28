@@ -8,6 +8,7 @@ const { STATUS_CODES, MESSAGES } = require("../constants");
 const validateObjectId = (paramName = "id") => (req, res, next) => {
   const value = req?.params?.[paramName];
 
+  // region check
   if (!mongoose.Types.ObjectId.isValid(value)) {
     return apiResponse(
       res,
@@ -18,9 +19,12 @@ const validateObjectId = (paramName = "id") => (req, res, next) => {
       MESSAGES.INVALID_OBJECT_ID ?? "Invalid ID format"
     );
   }
+  // endregion
 
   next();
 };
 // endregion
 
+// region exports
 module.exports = validateObjectId;
+// endregion

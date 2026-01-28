@@ -9,10 +9,11 @@ import Loader from "../../components/UI/Loader";
 import { showToast } from "../../features/toast/toastSlice";
 import { useNavigate } from "react-router-dom";
 import Pagination from "../ui/Pagination";
+import { BsExclamationCircle } from "react-icons/bs";
 // endregion
 
 // region EmployeeList component
-const EmployeeList = ({ filters = {} }) => {
+const EmployeeList = ({ filters = {}, onTotalUpdate = () => {} }) => {
   // region hooks
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -36,34 +37,27 @@ const EmployeeList = ({ filters = {} }) => {
 
   // region fetch employees on page/filters change
   useEffect(() => {
-    /**
-     * Fetch employee list with pagination and filters
-     * Safe spread of filters with fallback
-     */
     dispatch(
-      getEmployees?.({
+      getEmployees({
         skip: (page - 1) * limit,
         limit,
         ...(filters ?? {}),
       }),
-    );
+    )
+      .unwrap()
+      .then((res) => onTotalUpdate?.(res?.count ?? 0))
+      .catch(() => onTotalUpdate?.(0));
   }, [dispatch, page, filters]);
   // endregion
 
   // region reset page when filters change
   useEffect(() => {
-    /**
-     * Whenever filters update, reset pagination to page 1
-     */
     setPage(1);
   }, [filters]);
   // endregion
 
   // region handlePageChange
   const handlePageChange = (newPage = 1) => {
-    /**
-     * Prevent navigation to invalid pages
-     */
     if (newPage < 1 || newPage > totalPages) return;
     setPage(newPage);
   };
@@ -71,64 +65,64 @@ const EmployeeList = ({ filters = {} }) => {
 
   // region handleDelete
   const handleDelete = async (id = "") => {
-    /**
-     * Delete employee after confirmation
-     * Re-fetch list after deletion
-     */
     if (!window?.confirm?.("Are you sure you want to delete this employee?"))
       return;
 
     try {
-      await dispatch(removeEmployee?.(id))?.unwrap?.();
+      // Delete employee via Redux thunk
+      await dispatch(removeEmployee(id))?.unwrap?.();
 
+      // Show success toast
       dispatch(
-        showToast?.({
+        showToast({
           message: "Employee deleted successfully",
           type: "success",
         }),
       );
 
-      dispatch(
-        getEmployees?.({
-          skip: (page - 1) * limit,
-          limit,
-          ...(filters ?? {}),
-        }),
-      );
+      // Optionally update total count locally
+      onTotalUpdate?.((prevCount) => Math.max((prevCount ?? 1) - 1, 0));
     } catch (err) {
       dispatch(
-        showToast?.({
+        showToast({
           message: err?.message ?? "Failed to delete employee",
           type: "error",
         }),
       );
+      onTotalUpdate?.(0);
     }
   };
   // endregion
 
   // region handleEdit
   const handleEdit = (emp = {}) => {
-    /**
-     * Navigate to edit page with employee ID
-     */
     navigate?.(`/employees/edit/${emp?._id ?? ""}`);
   };
   // endregion
 
   // region conditional UI states
-  if (loading) return <Loader fullScreen text='Loading employees...' />;
-  if (error) return <div className='alert alert-danger'>{error}</div>;
-  if (!employees?.length) return <div>No employees found</div>;
+  if (loading) {
+    return <Loader fullScreen text='Loading employees...' />;
+  }
+  if (error) {
+    return <div className='alert alert-danger'>{error}</div>;
+  }
+  if (!employees?.length)
+    return (
+      <div className='d-flex flex-column align-items-center justify-content-center text-center mt-5'>
+        <BsExclamationCircle size={50} className='text-muted mb-3' />
+        <h4 className='text-muted'>No employees found</h4>
+        <p className='text-muted'></p>
+      </div>
+    );
   // endregion
 
   // region render
   return (
     <div className='container mt-4'>
-      {/* table title */}
       <h3>Employee List (Total: {count ?? 0})</h3>
 
       <table className='table table-bordered table-striped mt-3'>
-        {/* table header */}
         <thead className='thead-dark'>
           <tr>
             <th>Name</th>
@@ -139,7 +133,6 @@ const EmployeeList = ({ filters = {} }) => {
             <th className='text-center'>Actions</th>
           </tr>
         </thead>
-        {/* table data */}
         <tbody>
           {employees?.map?.((emp = {}) => (
             <tr key={emp?._id ?? Math.random()}>
@@ -155,23 +148,18 @@ const EmployeeList = ({ filters = {} }) => {
               </td>
               <td className='text-center'>
                 <div className='d-inline-flex gap-2'>
-                  {/* View button */}
                   <button
                     className='btn btn-sm btn-outline-info'
                     onClick={() => navigate(`/employees/view/${emp?._id}`)}
                   >
                     View
                   </button>
-
-                  {/* Edit button */}
                   <button
                     className='btn btn-sm btn-outline-primary'
                     onClick={() => handleEdit(emp)}
                   >
                     Edit
                   </button>
-
-                  {/* Delete button */}
                   <button
                     className='btn btn-sm btn-outline-danger'
                     onClick={() => handleDelete(emp?._id)}
@@ -184,7 +172,7 @@ const EmployeeList = ({ filters = {} }) => {
           ))}
         </tbody>
       </table>
-      {/* pagination */}
+
       <Pagination
         page={page ?? 1}
         totalPages={totalPages ?? 1}
