@@ -77,13 +77,13 @@ const EmployeeList = ({ filters = {}, onTotalUpdate = () => {} }) => {
       );
 
       // Fetch employees again
-      const res = await dispatch(
-        getEmployees({
-          skip: (page - 1) * limit,
-          limit,
-          ...(filters ?? {}),
-        }),
-      ).unwrap();
+      // const res = await dispatch(
+      //   getEmployees({
+      //     skip: (page - 1) * limit,
+      //     limit,
+      //     ...(filters ?? {}),
+      //   }),
+      // ).unwrap();
 
       // Calculate total pages after deletion
       const newTotalPages = Math.ceil((res?.count ?? 0) / limit);

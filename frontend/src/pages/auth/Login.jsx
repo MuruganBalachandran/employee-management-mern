@@ -8,7 +8,10 @@ import Loader from "../../components/UI/Loader";
 
 import { login } from "../../features/auth/authSlice";
 import { showToast } from "../../features/toast/toastSlice";
-import { emailValidation, passwordValidation } from "../../validations/authValidation";
+import {
+  emailValidation,
+  passwordValidation,
+} from "../../validations/authValidation";
 // endregion
 
 // region component
@@ -51,11 +54,13 @@ const Login = () => {
 
     const errors = {
       email: !email ? "Email is required" : emailValidation(email, "login"),
-      password: !password ? "Password is required" : passwordValidation(password),
+      password: !password
+        ? "Password is required"
+        : passwordValidation(password),
     };
 
     const filteredErrors = Object.fromEntries(
-      Object.entries(errors).filter(([_, value]) => value)
+      Object.entries(errors).filter(([_, value]) => value),
     );
 
     if (Object.keys(filteredErrors).length > 0) {
@@ -73,53 +78,54 @@ const Login = () => {
       // redirect based on role
       if (user?.role === "employee") navigate("/me");
       else navigate("/");
-
     } catch (err) {
-      dispatch(
-        showToast({ message: err ?? "Login failed!", type: "error" })
-      );
+      dispatch(showToast({ message: err ?? "Login failed!", type: "error" }));
     }
   };
   // endregion
 
   // region render
   return (
-    <div className="auth-page d-flex justify-content-center align-items-center min-vh-100 p-3">
-      {loading && <Loader fullScreen text="Logging in..." />}
-
+    <div className='auth-page d-flex justify-content-center align-items-center min-vh-100 p-3'>
+      {loading && <Loader fullScreen text='Logging in...' />}
+      {/* region form */}
       <form
-        className="auth-form card p-4 shadow-sm w-100"
+        className='auth-form card p-4 shadow-sm w-100'
         style={{ maxWidth: "400px" }}
         onSubmit={handleSubmit}
         noValidate
       >
-        <h2 className="mb-4 text-center">Login</h2>
-
+        <h2 className='mb-4 text-center'>Login</h2>
+        {/* email field */}
         <Input
-          label="Email"
-          type="email"
+          label='Email'
+          type='email'
           value={email}
           onChange={handleEmailChange}
           error={formErrors?.email}
-          placeholder="Enter your email"
+          placeholder='Enter your email'
         />
-
+        {/* password field */}
         <Input
-          label="Password"
-          type="password"
+          label='Password'
+          type='password'
           value={password}
           onChange={handlePasswordChange}
           error={formErrors?.password}
-          placeholder="Enter your password"
+          placeholder='Enter your password'
         />
 
-        <button type="submit" className="btn btn-primary w-100 mt-3">
+        {/* login btn */}
+        <button type='submit' className='btn btn-primary w-100 mt-3'>
           Login
         </button>
-
-        <p className="text-center mt-3">
+        {/* redirect */}
+        <p className='text-center mt-3'>
           Don't have an account?{" "}
-          <Link to="/register" className="fw-bold text-primary text-decoration-none">
+          <Link
+            to='/register'
+            className='fw-bold text-primary text-decoration-none'
+          >
             Register
           </Link>
         </p>

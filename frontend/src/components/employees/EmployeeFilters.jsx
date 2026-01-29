@@ -18,16 +18,21 @@ const EmployeeFilters = ({ onFilter = () => {} }) => {
   // endregion
 
   // region debounced live filtering (ONLY when values change)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onFilterRef.current?.({
-        search: search?.trim?.() ?? "",
-        department: department ?? "",
-      });
-    }, 1000);
+const firstRun = useRef(true);
 
-    return () => clearTimeout(timer);
-  }, [search, department]); // ❗ no onFilter here
+useEffect(() => {
+  if (firstRun.current) {
+    firstRun.current = false;
+    return;
+  }
+
+  const timer = setTimeout(() => {
+    onFilterRef.current({ search, department });
+  }, 1000);
+
+  return () => clearTimeout(timer);
+}, [search, department]);
+
   // endregion
 
   return (
