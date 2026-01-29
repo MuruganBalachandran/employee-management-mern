@@ -1,73 +1,51 @@
 // region name validation
 export const nameValidation = (name = "") => {
   const trimmed = name.trim();
-  if (!trimmed) {
-    return "Name is required";
-  }
-  if (trimmed.length < 3) {
-    return "Name must be at least 3 characters";
-  }
-  if (trimmed.length > 20) {
-    return "Name cannot exceed 20 characters";
-  }
+  if (!trimmed) return "Name is required";
+  if (trimmed.length < 3) return "Name must be at least 3 characters";
+  if (trimmed.length > 20) return "Name cannot exceed 20 characters";
   return "";
 };
 // endregion
 
-// region email validation (strong RFC-style + domain check)
-export const emailValidation = (email = "", type = "admin") => {
+// region email validation (login supports both roles)
+export const emailValidation = (email = "", type = "login") => {
   const trimmed = email.trim();
+  if (!trimmed) return "Email is required";
 
-  if (!trimmed) {
-    return "Email is required";
-  }
-
-  // RFC 5322 compliant email regex (simplified but strong)
   const regex =
     /^(?!.*\.\.)(?!.*\.$)(?!^\.)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-  // Domain check
-  const domain = trimmed.split("@")[1] || "";
-  if (type === "admin" && domain !== "spanadmin.com") {
-    return "Admin email must end with @spanadmin.com";
-  }
-  // if (type === "employee" && domain !== "spanemployee.com") {
-  //   return "Employee email must end with @spanemployee.com";
-  // }
+  if (!regex.test(trimmed)) return "Invalid email format";
 
+  const domain = trimmed.split("@")[1] || "";
+
+  if (type === "admin" && domain !== "spanadmin.com")
+    return "Admin email must end with @spanadmin.com";
+
+  if (type === "employee" && domain !== "spanemployee.com")
+    return "Employee email must end with @spanemployee.com";
+
+  // type === "login" → allow both
   return "";
 };
 // endregion
-
-
 
 // region password validation
 export const passwordValidation = (password = "") => {
-  if (!password) {
-    return "Password is required";
-  }
-  if (password.length < 8) {
-    return "Password must be at least 8 characters";
-  }
-  if (password.length > 128) {
-    return "Password cannot exceed 128 characters";
-  }
-  if (!/[A-Z]/.test(password)) {
+  if (!password) return "Password is required";
+  if (password.length < 8) return "Password must be at least 8 characters";
+  if (password.length > 128) return "Password cannot exceed 128 characters";
+  if (!/[A-Z]/.test(password))
     return "Password must contain an uppercase letter";
-  }
-  if (!/[a-z]/.test(password)) {
+  if (!/[a-z]/.test(password))
     return "Password must contain a lowercase letter";
-  }
-  if (!/[0-9]/.test(password)) {
-    return "Password must contain a number";
-  }
-  if (!/[!@#$%^&*]/.test(password)) {
+  if (!/[0-9]/.test(password)) return "Password must contain a number";
+  if (!/[!@#$%^&*]/.test(password))
     return "Password must contain a special character (!@#$%^&*)";
-  }
   return "";
 };
 // endregion
-
 
 // region password rule checker (for live UI)
 export const passwordRules = (password = "") => ({

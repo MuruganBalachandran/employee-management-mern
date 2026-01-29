@@ -1,55 +1,70 @@
 // region imports
 const Employee = require("../models/employeeModel");
+const User = require("../models/userModel");
 // endregion
 
-// region employee queries
-
-//region create employee
+// region create employee
 const createEmployee = async (data = {}) => {
   const employee = new Employee(data);
   await employee.save();
-  return employee.toObject?.();
+  return employee.toObject();
 };
+// endregion
 
-//region get employee by id
+// region get by id
 const getEmployeeById = async (id = "") => {
-  return await Employee.findOne({ _id: id, isDeleted: false }).lean();
+  return await Employee.findOne({ _id: id, isDeleted: false })
+    .populate("userRef", "email role")
+    .lean();
 };
+// endregion
 
-// region get all employees
+// region list all employees (ADMIN)
 const getAllEmployees = async (filter = {}, skip = 0, limit = 20) => {
-  const query = { isDeleted: false, ...filter };
+  const query = { ...filter, isDeleted: false };
+
   const [count, items] = await Promise.all([
     Employee.countDocuments(query),
     Employee.find(query)
-      .skip(Math.max(skip, 0))
+      .populate("userRef", "email role")
+      .skip(skip)
       .limit(Math.min(limit, 100))
       .lean(),
   ]);
+
   return { count, items };
 };
 // endregion
 
-// region update employee by id
-const updateEmployeeById = async (id = "", userId = "", data = {}) => {
+// region update employee
+const updateEmployeeById = async (id = "", data = {}) => {
   return await Employee.findOneAndUpdate(
-    { _id: id, createdBy: userId, isDeleted: false }, 
+    { _id: id, isDeleted: false },
     { $set: data },
     { new: true, runValidators: true }
-  ).lean();
+  )
+    .populate("userRef", "email role")
+    .lean();
 };
 // endregion
 
-
-//region delete employee by id
+// region delete employee (soft + cascade)
 const deleteEmployeeById = async (id = "") => {
-  return await Employee.findOneAndUpdate(
-    { _id: id },
+  const employee = await Employee.findOneAndUpdate(
+    { _id: id, isDeleted: false },
     { isDeleted: true },
     { new: true }
-  ).lean();
-};
+  );
 
+  if (!employee) return null;
+
+  await User.findOneAndUpdate(
+    { _id: employee.userRef, isDeleted: false },
+    { isDeleted: true }
+  );
+
+  return employee.toObject();
+};
 // endregion
 
 // region exports

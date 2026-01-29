@@ -1,6 +1,6 @@
 // region imports
 const express = require("express");
-const { auth } = require("../middlewares/authMiddleware");
+const { auth, adminOnly } = require("../middlewares/authMiddleware");
 const validateJson = require("../middlewares/validateJson");
 const { validateEmployee,validateEmployeeUpdate } = require("../validations/employeeValidation");
 const {
@@ -17,7 +17,7 @@ const validateObjectId = require("../validations/validateObjectId");
 const router = express.Router();
 
 // all routes are protected
-router.use(auth);
+router.use(auth, adminOnly);
 
 // create
 router.post("/", validateJson(validateEmployee), addEmployee);

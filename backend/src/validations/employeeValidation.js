@@ -4,7 +4,8 @@ const {
   PHONE_REGEX,
   ZIP_REGEX,
   EMAIL_REGEX,
-  VALID_DEPARTMENTS
+  VALID_DEPARTMENTS,
+  PASSWORD_REGEX
 } = require("../utils/commonUtil");
 // endregion
 
@@ -14,6 +15,7 @@ const validateEmployee = (data = {}) => {
 
   const name = data?.name?.trim?.() ?? "";
   const email = data?.email?.trim?.() ?? "";
+  const password = data?.password?.trim?.() ?? "";
   const department = data?.department?.trim?.() ?? "";
   const phone = data?.phone?.trim?.() ?? "";
   const line1 = data?.address?.line1?.trim?.() ?? "";
@@ -37,6 +39,13 @@ if (!email) {
   errors.email = "Employee email must end with @spanemployee.com";
 }
 
+  // password
+  if (!password) {
+    errors.password = "Password is required";
+  } else if (!PASSWORD_REGEX.test(password)) {
+    errors.password =
+      "Password must be 8–16 chars, include upper, lower, number & special character";
+  }
 
 if (!department) {
   errors.department = "Department is required";
@@ -80,7 +89,9 @@ const validateEmployeeUpdate = (data = {}) => {
   if (data?.email !== undefined) {
     errors.email = "Email cannot be updated";
   }
-
+ if (data?.password !== undefined) {
+    errors.passowrd = "Passowrd cannot be updated";
+  }
   // Name validation
   if (data?.name !== undefined) {
     const name = data.name?.trim?.() ?? "";
@@ -90,6 +101,7 @@ const validateEmployeeUpdate = (data = {}) => {
       errors.name = "Name must be 2–50 letters only";
     }
   }
+  
 
   // Phone validation
   if (data?.phone !== undefined) {

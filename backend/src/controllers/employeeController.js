@@ -9,73 +9,67 @@ const {
   updateEmployeeById,
   deleteEmployeeById,
 } = require("../queries/employeeQuery");
+const { createUser } = require("../queries/authQuery");
+const User = require("../models/userModel");
 // endregion
 
-// region create employee
+// region add employee (ADMIN ONLY)
 const addEmployee = asyncHandler(async (req, res) => {
   const {
     name = "",
     email = "",
+    password = "",
     department = "",
     phone = "",
     address: { line1 = "", line2 = "", city = "", state = "", zip = "" } = {},
   } = req.body ?? {};
 
-  const data = { name, email, department, phone, address: { line1, line2, city, state, zip } };
-  const userId = req?.user?._id ?? "";
+  let user; // for rollback
 
   try {
-    const employee = await createEmployee({ ...data, createdBy: userId });
-    return apiResponse(
-      res,
-      STATUS_CODES.CREATED,
-      true,
-      MESSAGES.EMPLOYEE_CREATED ?? "Employee created successfully",
-      { employee },
-    );
+    // create login
+    user = await createUser({
+      name,
+      email,
+      password,
+      role: "employee",
+    });
+
+    // create employee profile
+    const employee = await createEmployee({
+      userRef: user._id,
+      name,
+      email,
+      department,
+      phone,
+      address: { line1, line2, city, state, zip },
+    });
+
+    return apiResponse(res, STATUS_CODES.CREATED, true, "Employee created", {
+      employee,
+    });
   } catch (err) {
-    // Duplicate key error
-    if (err.code === 11000 && err.keyValue?.email) {
-      return apiResponse(
-        res,
-        STATUS_CODES.BAD_REQUEST,
-        false,
-        "Validation failed",
-        null,
-        { email: "Email already exists" } // structured error
-      );
+    // rollback user if employee failed
+    if (user?._id) {
+      await User.findOneAndUpdate({ _id: user._id }, { isDeleted: true });
     }
 
-    // Any other error
-    return apiResponse(
-      res,
-      STATUS_CODES.SERVER_ERROR,
-      false,
-      err.message || "Failed to create employee",
-    );
+    return apiResponse(res, 500, false, err.message);
   }
 });
-
 // endregion
-// region list employees
+
+// region list all employees
 const listEmployees = asyncHandler(async (req, res) => {
-  const userId = req?.user?._id ?? "";
   const skip = Number(req.query.skip) || 0;
   const limit = Math.min(Number(req.query.limit) || 20, 100);
   const search = req.query.search || "";
   const department = req.query.department || "";
 
-  const filter = { createdBy: userId, isDeleted: false };
+  const filter = {};
 
-  // Apply search filter
-  if (search) {
-    filter.name = { $regex: search, $options: "i" }; // case-insensitive
-  }
-
-  // Apply department filter
-  if (department) {
-    filter.department = department; // exact match
-  }
+  if (search) filter.name = { $regex: search, $options: "i" };
+  if (department) filter.department = department;
 
   const { count, items } = await getAllEmployees(filter, skip, limit);
 
@@ -83,32 +77,31 @@ const listEmployees = asyncHandler(async (req, res) => {
     res,
     STATUS_CODES.SUCCESS,
     true,
-    MESSAGES.EMPLOYEES_FETCHED ?? "Employees fetched successfully",
-    { count, items }
+    MESSAGES.EMPLOYEES_FETCHED ?? "Employees fetched",
+    { count, items },
   );
 });
 // endregion
 
-// region get single employee
+// region get one employee
 const getEmployee = asyncHandler(async (req, res) => {
-  const id = req?.params?.id ?? "";
-  const userId = req?.user?._id ?? "";
-  const employee = await getEmployeeById(id, userId);
-  if (!employee)
+  const employee = await getEmployeeById(req.params.id);
+
+  if (!employee) {
     return apiResponse(
       res,
       STATUS_CODES.SUCCESS,
       true,
-      "",
+      MESSAGES.NO_RECORDS ?? "No record found",
       null,
-      MESSAGES.NO_RECORDS ?? "No records found",
-      
     );
+  }
+
   return apiResponse(
     res,
     STATUS_CODES.SUCCESS,
     true,
-    MESSAGES.EMPLOYEE_FETCHED ?? "Employee fetched successfully",
+    MESSAGES.EMPLOYEE_FETCHED ?? "Employee fetched",
     { employee },
   );
 });
@@ -116,46 +109,32 @@ const getEmployee = asyncHandler(async (req, res) => {
 
 // region update employee
 const updateEmployee = asyncHandler(async (req, res) => {
-  const id = req?.params?.id ?? "";
-  
-  const userId = req?.user?._id ?? "";
- const {
-    name,
-    department,
-    phone,
-    address: {
-      line1,
-      line2,
-      city,
-      state,
-      zip,
-    } = {},
-  } = req?.body ?? {};
+  const { name, department, phone, address = {} } = req.body ?? {};
 
   const data = {
     ...(name !== undefined && { name }),
     ...(department !== undefined && { department }),
     ...(phone !== undefined && { phone }),
-    ...(line1 || line2 || city || state || zip
-      ? { address: { line1, line2, city, state, zip } }
-      : {}),
+    ...(Object.keys(address).length && { address }),
   };
 
-  const updated = await updateEmployeeById(id, userId, data);
-  if (!updated)
+  const updated = await updateEmployeeById(req.params.id, data);
+
+  if (!updated) {
     return apiResponse(
       res,
       STATUS_CODES.SUCCESS,
       true,
-      MESSAGES.NO_RECORDS ?? "No records found",
+      MESSAGES.NO_RECORDS ?? "No record found",
       null,
     );
+  }
 
   return apiResponse(
     res,
     STATUS_CODES.SUCCESS,
     true,
-    MESSAGES.EMPLOYEE_UPDATED ?? "Employee updated successfully",
+    MESSAGES.EMPLOYEE_UPDATED ?? "Employee updated",
     { employee: updated },
   );
 });
@@ -163,24 +142,23 @@ const updateEmployee = asyncHandler(async (req, res) => {
 
 // region delete employee
 const deleteEmployee = asyncHandler(async (req, res) => {
-  const id = req?.params?.id ?? "";
-  const userId = req?.user?._id ?? "";
+  const deleted = await deleteEmployeeById(req.params.id);
 
-  const deleted = await deleteEmployeeById(id, userId);
-  if (!deleted)
+  if (!deleted) {
     return apiResponse(
       res,
       STATUS_CODES.SUCCESS,
       true,
-      MESSAGES.NO_RECORDS ?? "No records found",
+      MESSAGES.NO_RECORDS ?? "No record found",
       null,
     );
+  }
 
   return apiResponse(
     res,
     STATUS_CODES.SUCCESS,
     true,
-    MESSAGES.EMPLOYEE_DELETED ?? "Employee deleted successfully",
+    MESSAGES.EMPLOYEE_DELETED ?? "Employee deleted",
     { employee: deleted },
   );
 });

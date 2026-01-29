@@ -31,7 +31,12 @@ export const login = createAsyncThunk(
       const token = res?.data?.data?.token ?? "";
       const user = res?.data?.data?.user ?? null;
 
-      if (token) localStorage?.setItem("token", token);
+     if (token) {
+  localStorage.setItem("token", token);
+  localStorage.setItem("user", JSON.stringify(user));
+}
+return user;
+
 
       dispatch?.(showToast?.({ message: "Logged in successfully!", type: "success" }));
       return user;
@@ -75,7 +80,9 @@ export const logout = createAsyncThunk(
     /* Logout user and clear token */
     try {
       await logoutUser?.();
-      localStorage?.removeItem?.("token");
+   localStorage.removeItem("token");
+localStorage.removeItem("user");
+
 
       dispatch?.(showToast?.({ message: "Logged out", type: "info" }));
       return null;
@@ -95,7 +102,7 @@ export const fetchCurrentUser = createAsyncThunk(
     /* Fetch logged-in user from backend */
     try {
       const res = await getCurrentUser?.();
-      return res?.data ?? null;
+   return res?.data?.data?.user ?? null;
     } catch (err) {
       return rejectWithValue?.(err?.response?.data?.message ?? "Failed to fetch user");
     }

@@ -1,6 +1,6 @@
 // region regex constants
 
-export const NAME_REGEX = /^[A-Za-z ]{2,50}$/; // letters and spaces only
+export const NAME_REGEX = /^[A-Za-z ]{3,50}$/; // letters and spaces only
 export const CITY_STATE_REGEX = /^[A-Za-z ]{2,50}$/; // letters and spaces only
 export const PHONE_REGEX = /^[6-9]\d{9}$/; // Indian 10-digit mobile
 export const ZIP_REGEX = /^\d{5,6}$/; // 5 or 6 digits
@@ -27,7 +27,7 @@ export const nameValidation = (name = "") => {
 
   const trimmed = name.trim();
   if (!trimmed) return "Name is required";
-  if (trimmed.length < 2) return "Name must be at least 2 characters";
+  if (trimmed.length < 3) return "Name must be at least 3 characters";
   if (trimmed.length > 50) return "Name cannot exceed 50 characters";
   if (!NAME_REGEX.test(trimmed)) return "Name can only contain letters and spaces";
   return "";
@@ -46,6 +46,34 @@ export const emailValidation = (email = "", type = "employee") => {
     return "Employee email must end with @spanemployee.com";
   }
 
+  return "";
+};
+// endregion
+
+
+// region password validation
+export const passwordValidation = (password = "") => {
+  if (!password) {
+    return "Password is required";
+  }
+  if (password.length < 8) {
+    return "Password must be at least 8 characters";
+  }
+  if (password.length > 128) {
+    return "Password cannot exceed 128 characters";
+  }
+  if (!/[A-Z]/.test(password)) {
+    return "Password must contain an uppercase letter";
+  }
+  if (!/[a-z]/.test(password)) {
+    return "Password must contain a lowercase letter";
+  }
+  if (!/[0-9]/.test(password)) {
+    return "Password must contain a number";
+  }
+  if (!/[!@#$%^&*]/.test(password)) {
+    return "Password must contain a special character (!@#$%^&*)";
+  }
   return "";
 };
 // endregion

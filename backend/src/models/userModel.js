@@ -3,20 +3,22 @@ const mongoose = require("mongoose");
 const { hashPassword, comparePassword } = require("../utils/hashUtils");
 // endregion
 
-// region user schema
+// region schema
 const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: true,
       trim: true,
+      minlength: 2,
+      maxlength: 50,
     },
     email: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
       lowercase: true,
+      unique: true,
     },
     password: {
       type: String,
@@ -27,15 +29,27 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: ["admin", "employee"],
-      // required: true,
-      default: "admin",
+      default: "employee",
+      index: true,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 // endregion
 
-// region password hash middleware (CREATE & SAVE)
+// region indexes
+userSchema.index(
+  { email: 1 },
+  { unique: true, partialFilterExpression: { isDeleted: false } }
+);
+// endregion
+
+// region password hash on save
 userSchema.pre("save", async function (next) {
   try {
     if (this.isModified("password")) {
@@ -47,30 +61,26 @@ userSchema.pre("save", async function (next) {
 });
 // endregion
 
-// region hash password on UPDATE too
+// region password hash on update
 userSchema.pre("findOneAndUpdate", async function (next) {
   try {
     const update = this.getUpdate();
-
-    if (update?.password) {
-      update.password = await hashPassword(update?.password);
-      this.setUpdate(update);
+    if (update?.$set?.password) {
+      update.$set.password = await hashPassword(update.$set.password);
     }
-
-    next();
   } catch (err) {
     next(err);
   }
 });
 // endregion
 
-// region password compare method
-userSchema.methods.comparePassword = async function (enteredPassword = "") {
-  return await comparePassword(enteredPassword, this.password);
+// region compare password
+userSchema.methods.comparePassword = function (enteredPassword = "") {
+  return comparePassword(enteredPassword, this.password);
 };
 // endregion
 
-// region model export
+// region export
 const User = mongoose.model("User", userSchema);
 module.exports = User;
 // endregion

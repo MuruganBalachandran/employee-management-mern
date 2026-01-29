@@ -53,11 +53,15 @@ const validateLogin = (data = {}) => {
 
   if (!email) {
     errors.email = "Email is required";
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  } else if (!EMAIL_REGEX.test(email)) {
     errors.email = "Invalid email format";
-  } else if (!email.endsWith("@spanadmin.com")) {
-    errors.email = "Admin email must end with @spanadmin.com";
+  } else if (
+    !email.endsWith("@spanadmin.com") &&
+    !email.endsWith("@spanemployee.com")
+  ) {
+    errors.email = "Email must be admin or employee domain";
   }
+
 
   if (!password) {
     errors.password = "Password is required";

@@ -7,6 +7,7 @@ import {
   validateEmployee,
   nameValidation,
   emailValidation,
+  passwordValidation,
   departmentValidation,
   phoneValidation,
   addressValidation,
@@ -21,27 +22,17 @@ const EmployeeForm = ({ initialData = {}, onSubmit = () => {} }) => {
 
   // region form state
   const [form, setForm] = useState({
-    // name: "",
-    // email: "",
-    // department: "",
-    // phone: "",
-    // address: {
-    //   line1: "",
-    //   line2: "",
-    //   city: "",
-    //   state: "",
-    //   zip: "",
-    // },
-       name: "vignesh",
-    email: "vignesh@spanemployee.com",
+    name: "",
+    email: "",
+    password: "",
     department: "",
-    phone: "9999999999",
+    phone: "",
     address: {
-      line1: "sssss",
-      line2: "Full Stack Developer",
-      city: "ccccc",
-      state: "cccc",
-      zip: "666666",
+      line1: "",
+      line2: "",
+      city: "",
+      state: "",
+      zip: "",
     },
   });
   const [errors, setErrors] = useState({});
@@ -52,7 +43,8 @@ const EmployeeForm = ({ initialData = {}, onSubmit = () => {} }) => {
     if (initialData?._id) {
       setForm({
         name: initialData?.name ?? "",
-        email: initialData?.email ?? "",
+        email: initialData?.userRef?.email ?? "",
+        password: "",
         department: initialData?.department ?? "",
         phone: initialData?.phone ?? "",
         address: {
@@ -69,47 +61,45 @@ const EmployeeForm = ({ initialData = {}, onSubmit = () => {} }) => {
 
   // region handleChange
   const handleChange = (field = "", value = "") => {
-    // validate address fields
     if (field?.startsWith?.("address.")) {
-      const key = field?.split?.(".")?.[1] ?? "";
-      const updatedAddress = { ...(form?.address ?? {}), [key]: value };
-      const addressErrors = addressValidation?.(updatedAddress) ?? {};
+      const key = field.split(".")[1];
+      const updatedAddress = { ...form.address, [key]: value };
+      const addressErrors = addressValidation(updatedAddress);
 
-      // set values
       setForm((prev) => ({ ...prev, address: updatedAddress }));
-      // set errors
-      setErrors((prevErrors) => {
-        const newErrors = { ...prevErrors };
-        if (addressErrors?.[key])
-          newErrors[`address.${key}`] = addressErrors[key];
-        else delete newErrors[`address.${key}`];
-        return newErrors;
+      setErrors((prev) => {
+        const next = { ...prev };
+        if (addressErrors?.[key]) next[`address.${key}`] = addressErrors[key];
+        else delete next[`address.${key}`];
+        return next;
       });
     } else {
       let fieldError = "";
-      // fro other fields
+
       switch (field) {
         case "name":
-          fieldError = nameValidation?.(value) ?? "";
+          fieldError = nameValidation(value);
           break;
         case "email":
-          fieldError = emailValidation?.(value, "employee") ?? "";
+          fieldError = emailValidation(value, "employee", isEdit);
+          break;
+        case "password":
+          fieldError = passwordValidation(value, isEdit);
           break;
         case "department":
-          fieldError = departmentValidation?.(value) ?? "";
+          fieldError = departmentValidation(value);
           break;
         case "phone":
-          fieldError = phoneValidation?.(value) ?? "";
+          fieldError = phoneValidation(value);
           break;
       }
 
       setForm((prev) => ({ ...prev, [field]: value }));
-
-      setErrors((prevErrors) => {
-        const newErrors = { ...prevErrors };
-        if (fieldError) newErrors[field] = fieldError;
-        else delete newErrors[field];
-        return newErrors;
+      setErrors((prev) => {
+        const next = { ...prev };
+        if (fieldError) next[field] = fieldError;
+        else delete next[field];
+        return next;
       });
     }
   };
@@ -117,121 +107,61 @@ const EmployeeForm = ({ initialData = {}, onSubmit = () => {} }) => {
 
   // region handleSubmit
   const handleSubmit = (e) => {
-    e?.preventDefault?.();
-    const validationErrors = validateEmployee?.(form ?? {}) ?? {};
+    e.preventDefault();
 
-    if (Object.keys(validationErrors ?? {}).length > 0) {
+    const payload = { ...form };
+    if (isEdit) {
+      delete payload.email;
+      delete payload.password;
+    }
+
+    const validationErrors = validateEmployee(payload, isEdit);
+
+    if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      dispatch?.(
-        showToast({ message: "Please fix the errors", type: "error" }),
-      );
+      dispatch(showToast({ message: "Please fix the errors", type: "error" }));
       return;
     }
 
-    onSubmit?.(form ?? {}, setErrors);
+    onSubmit(payload, setErrors);
   };
   // endregion
 
   return (
-    <form onSubmit={handleSubmit} className='card p-4 shadow-sm'>
-      {/* Name input */}
-      <Input
-        label='Name'
-        name='name'
-        value={form?.name ?? ""}
-        onChange={(e) => handleChange("name", e?.target?.value)}
-        error={errors?.name}
-        placeholder='Enter employee name'
-      />
+    <form onSubmit={handleSubmit} className="card p-4 shadow-sm">
+      <Input label="Name" placeholder="Enter employee name" value={form.name} onChange={(e) => handleChange("name", e.target.value)} error={errors.name} />
 
-      {/* Email input */}
-      <Input
-        label='Email'
-        name='email'
-        type='email'
-        value={form?.email ?? ""}
-        onChange={(e) => handleChange("email", e?.target?.value)}
-        error={errors?.email}
-        placeholder='Enter employee email'
-        disabled={isEdit}
-      />
+      <Input label="Email" type="email" placeholder="Enter employee email" value={form.email} onChange={(e) => handleChange("email", e.target.value)} error={errors.email} disabled={isEdit} />
 
-      {/* Department select */}
+      {!isEdit && (
+        <Input label="Password" type="password" placeholder="Set login password" value={form.password} onChange={(e) => handleChange("password", e.target.value)} error={errors.password} />
+      )}
+
       <Input
-        label='Department'
-        name='department'
-        value={form?.department ?? ""}
-        onChange={(e) => handleChange("department", e?.target?.value)}
-        error={errors?.department}
+        label="Department"
         select
         options={[
           { value: "", label: "Select Department" },
-          ...VALID_DEPARTMENTS?.map?.((dept) => ({ value: dept, label: dept })),
+          ...VALID_DEPARTMENTS.map((d) => ({ value: d, label: d })),
         ]}
+        value={form.department}
+        onChange={(e) => handleChange("department", e.target.value)}
+        error={errors.department}
       />
 
-      {/* Phone input */}
-      <Input
-        label='Phone'
-        name='phone'
-        value={form?.phone ?? ""}
-        onChange={(e) => handleChange("phone", e?.target?.value)}
-        error={errors?.phone}
-        placeholder='Enter phone number'
-      />
+      <Input label="Phone" placeholder="Enter 10-digit phone number" value={form.phone} onChange={(e) => handleChange("phone", e.target.value)} error={errors.phone} />
 
-      {/* Address Line 1 */}
-      <Input
-        label='Address Line 1'
-        name='address.line1'
-        value={form?.address?.line1 ?? ""}
-        onChange={(e) => handleChange("address.line1", e?.target?.value)}
-        error={errors?.["address.line1"]}
-        placeholder='Street address'
-      />
+      <Input label="Address Line 1" placeholder="Street address" value={form.address.line1} onChange={(e) => handleChange("address.line1", e.target.value)} error={errors["address.line1"]} />
 
-      {/* Address Line 2 */}
-      <Input
-        label='Address Line 2'
-        name='address.line2'
-        value={form?.address?.line2 ?? ""}
-        onChange={(e) => handleChange("address.line2", e?.target?.value)}
-        error={errors?.["address.line2"]}
-        placeholder='Apartment, suite, etc.'
-      />
+      <Input label="Address Line 2" placeholder="Apartment, suite, etc." value={form.address.line2} onChange={(e) => handleChange("address.line2", e.target.value)} />
 
-      {/* City */}
-      <Input
-        label='City'
-        name='address.city'
-        value={form?.address?.city ?? ""}
-        onChange={(e) => handleChange("address.city", e?.target?.value)}
-        error={errors?.["address.city"]}
-        placeholder='City'
-      />
+      <Input label="City" placeholder="City" value={form.address.city} onChange={(e) => handleChange("address.city", e.target.value)} error={errors["address.city"]} />
 
-      {/* State */}
-      <Input
-        label='State'
-        name='address.state'
-        value={form?.address?.state ?? ""}
-        onChange={(e) => handleChange("address.state", e?.target?.value)}
-        error={errors?.["address.state"]}
-        placeholder='State'
-      />
+      <Input label="State" placeholder="State" value={form.address.state} onChange={(e) => handleChange("address.state", e.target.value)} error={errors["address.state"]} />
 
-      {/* ZIP Code */}
-      <Input
-        label='ZIP Code'
-        name='address.zip'
-        value={form?.address?.zip ?? ""}
-        onChange={(e) => handleChange("address.zip", e?.target?.value)}
-        error={errors?.["address.zip"]}
-        placeholder='ZIP / Postal code'
-      />
+      <Input label="ZIP" placeholder="ZIP / Postal code" value={form.address.zip} onChange={(e) => handleChange("address.zip", e.target.value)} error={errors["address.zip"]} />
 
-      {/* Submit button */}
-      <button type='submit' className='btn btn-primary mt-3'>
+      <button type="submit" className="btn btn-primary mt-3">
         {isEdit ? "Update Employee" : "Create Employee"}
       </button>
     </form>

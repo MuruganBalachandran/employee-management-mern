@@ -2,20 +2,28 @@
 const mongoose = require("mongoose");
 // endregion
 
-// region employee schema
+// region schema
 const employeeSchema = new mongoose.Schema(
   {
+    userRef: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      unique: true, // one employee per user
+    },
+
     name: {
       type: String,
       required: true,
-      default: "",
+      trim: true,
     },
-    email: {
+        email: {
       type: String,
       required: true,
+      trim: true,
       unique: true,
-      default: "",
     },
+
     department: {
       type: String,
       enum: [
@@ -31,49 +39,40 @@ const employeeSchema = new mongoose.Schema(
         "Network",
         "Cyber Security",
         "DevOps",
+        "Others",
       ],
       required: true,
       default: "Others",
     },
+
     phone: {
       type: String,
       required: true,
-      default: "",
     },
+
     address: {
-      line1: {
-        type: String,
-        required: true,
-        default: "",
-      },
-      line2: {
-        type: String,
-        default: "",
-      },
-      city: {
-        type: String,
-        required: true,
-        default: "",
-      },
-      state: {
-        type: String,
-        required: true,
-        default: "",
-      },
-      zip: {
-        type: String,
-        required: true,
-        default: "",
-      },
+      line1: { type: String, required: true },
+      line2: { type: String, default: "" },
+      city: { type: String, required: true },
+      state: { type: String, required: true },
+      zip: { type: String, required: true },
     },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    isDeleted: { type: Boolean, default: false },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 // endregion
 
-// region model export
+// region indexes
+employeeSchema.index({ isDeleted: 1 });
+// endregion
+
+// region export
 const Employee = mongoose.model("Employee", employeeSchema);
 module.exports = Employee;
 // endregion

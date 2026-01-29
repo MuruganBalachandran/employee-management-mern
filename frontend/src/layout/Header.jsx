@@ -19,24 +19,37 @@ const Header = () => {
   };
   // endregion
 
+  const isAdmin = user?.role === "admin";
+
   return (
     <header className="navbar navbar-expand-lg navbar-dark bg-primary">
       <div className="container">
-        {/* Home link */}
         <Link className="navbar-brand" to="/">
           Employee Management
         </Link>
 
         <div className="collapse navbar-collapse justify-content-end">
           <ul className="navbar-nav d-flex align-items-center gap-2">
-            {/* Add Employee nav link */}
-            <li className="nav-item">
-              <Link to="/employees/create" className="nav-link text-light">
-                Add Employee
-              </Link>
-            </li>
+            
+            {/* Add Employee — Admin only */}
+            {isAdmin && (
+              <li className="nav-item">
+                <Link to="/employees/create" className="nav-link text-light">
+                  Add Employee
+                </Link>
+              </li>
+            )}
 
-            {/* Logout button */}
+            {/* Profile — Admin only */}
+            {isAdmin && (
+              <li className="nav-item">
+                <Link to="/me" className="nav-link text-light">
+                  My Profile
+                </Link>
+              </li>
+            )}
+
+            {/* Logout */}
             {user && (
               <li className="nav-item">
                 <button
@@ -54,6 +67,4 @@ const Header = () => {
   );
 };
 
-// region exports
 export default Header;
-// endregion

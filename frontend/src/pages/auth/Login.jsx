@@ -31,7 +31,7 @@ const Login = () => {
     setEmail(value);
     setFormErrors((prev) => ({
       ...prev,
-      email: !value ? "Email is required" : emailValidation(value),
+      email: !value ? "Email is required" : emailValidation(value, "login"),
     }));
   };
 
@@ -49,9 +49,8 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // client-side validation
     const errors = {
-      email: !email ? "Email is required" : emailValidation(email),
+      email: !email ? "Email is required" : emailValidation(email, "login"),
       password: !password ? "Password is required" : passwordValidation(password),
     };
 
@@ -64,20 +63,20 @@ const Login = () => {
       return;
     }
 
-    // dispatch login action
     try {
-      await dispatch(login({ email, password }))?.unwrap();
+      const user = await dispatch(login({ email, password }))?.unwrap();
+
       setEmail("");
       setPassword("");
       setFormErrors({});
-      navigate("/");
 
-      // optional success toast
-      dispatch(showToast({ message: "Logged in successfully!", type: "success" }));
+      // redirect based on role
+      if (user?.role === "employee") navigate("/me");
+      else navigate("/");
+
     } catch (err) {
-      // show backend error toast
       dispatch(
-        showToast({ message: err?.message ?? "Login failed!", type: "error" })
+        showToast({ message: err ?? "Login failed!", type: "error" })
       );
     }
   };
@@ -85,9 +84,7 @@ const Login = () => {
 
   // region render
   return (
-<div className="auth-page d-flex justify-content-center align-items-center min-vh-100 p-3">
-
-      {/* Loader */}
+    <div className="auth-page d-flex justify-content-center align-items-center min-vh-100 p-3">
       {loading && <Loader fullScreen text="Logging in..." />}
 
       <form
@@ -96,10 +93,8 @@ const Login = () => {
         onSubmit={handleSubmit}
         noValidate
       >
-        {/* Form heading */}
         <h2 className="mb-4 text-center">Login</h2>
 
-        {/* Email input */}
         <Input
           label="Email"
           type="email"
@@ -109,7 +104,6 @@ const Login = () => {
           placeholder="Enter your email"
         />
 
-        {/* Password input */}
         <Input
           label="Password"
           type="password"
@@ -119,25 +113,19 @@ const Login = () => {
           placeholder="Enter your password"
         />
 
-        {/* Submit button */}
         <button type="submit" className="btn btn-primary w-100 mt-3">
           Login
         </button>
 
-        {/* Link to register */}
         <p className="text-center mt-3">
           Don't have an account?{" "}
-          <Link
-            to="/register"
-            className="fw-bold text-primary text-decoration-none"
-          >
+          <Link to="/register" className="fw-bold text-primary text-decoration-none">
             Register
           </Link>
         </p>
       </form>
     </div>
   );
-  // endregion
 };
 // endregion
 

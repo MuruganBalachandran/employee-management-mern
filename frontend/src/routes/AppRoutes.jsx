@@ -9,51 +9,57 @@ import Register from "../pages/auth/Register";
 import Home from "../pages/home/Home";
 import CreateEmployee from "../pages/employees/CreateEmployee";
 import EditEmployee from "../pages/employees/EditEmployee";
+import EmployeeView from "../pages/employees/EmployeeView";
+import MyProfile from "../pages/employees/MyProfile";
 import NotFound from "../pages/NotFound";
 
 // Layout
 import MainLayout from "../layout/MainLayout";
-import EmployeeView from "../pages/employees/EmployeeView";
 // endregion
 
 // region Protected Route component
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated = false } = useSelector((state) => state?.auth ?? {});
-  if (!isAuthenticated) return <Navigate to='/login' replace />;
-  return children ?? <Outlet />;
+const ProtectedRoute = () => {
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
 };
 // endregion
 
-// region App Routes component
-const AppRoutes = () => {
-  const { authChecked = false } = useSelector((state) => state?.auth ?? {});
+// region Admin Route component
+const AdminRoute = () => {
+  const { user } = useSelector((state) => state.auth);
+  return user?.role === "admin" ? <Outlet /> : <Navigate to="/me" replace />;
+};
+// endregion
 
-  // Show nothing until auth check is complete
+// region App Routes
+const AppRoutes = () => {
+  const { authChecked } = useSelector((state) => state.auth);
   if (!authChecked) return null;
 
   return (
     <Routes>
-      {/* Public routes */}
-      <Route path='/login' element={<Login />} />
-      <Route path='/register' element={<Register />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
 
-      {/* Protected routes */}
       <Route element={<ProtectedRoute />}>
         <Route element={<MainLayout />}>
-          <Route path='/' element={<Home />} />
-          <Route path='/employees/create' element={<CreateEmployee />} />
-          <Route path='/employees/edit/:id' element={<EditEmployee />} />
-          <Route path="/employees/view/:id" element={<EmployeeView />} />
+          <Route path="/" element={<Home />} />
+
+          {/* Employee self profile */}
+          <Route path="/me" element={<MyProfile />} />
+
+          {/* Admin only */}
+          <Route element={<AdminRoute />}>
+            <Route path="/employees/create" element={<CreateEmployee />} />
+            <Route path="/employees/edit/:id" element={<EditEmployee />} />
+            <Route path="/employees/view/:id" element={<EmployeeView />} />
+          </Route>
         </Route>
       </Route>
 
-      {/* Fallback */}
-      <Route path='*' element={<NotFound />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };
-// endregion
 
-// region exports
 export default AppRoutes;
-// endregion

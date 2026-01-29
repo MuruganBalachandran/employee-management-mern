@@ -6,107 +6,111 @@ const { findUserByEmail, createUser } = require("../queries/authQuery");
 const { signToken } = require("../utils/jwtUtils");
 // endregion
 
-// region register controller
+// region ADMIN register
 const register = asyncHandler(async (req, res) => {
-  const { name = "", email = "", password = "" } = req?.body ?? {};
+  const { name = "", email = "", password = "" } = req.body ?? {};
 
-  const existingUser = await findUserByEmail(email?.toLowerCase?.());
-  if (existingUser) {
+  // check existing
+  const existing = await findUserByEmail(email);
+  if (existing) {
     return apiResponse(
       res,
       STATUS_CODES.BAD_REQUEST,
       false,
-      "",
-      null,
-      MESSAGES.EMAIL_EXISTS ?? "Email already registered"
+      MESSAGES.EMAIL_EXISTS ?? "Email already exists",
     );
   }
 
-  const user = await createUser({ name, email: email?.toLowerCase?.(), password });
+  const user = await createUser({
+    name,
+    email,
+    password,
+    role: "admin", // only admin created here
+  });
 
   return apiResponse(
     res,
     STATUS_CODES.CREATED,
     true,
-    MESSAGES.USER_REGISTERED ?? "User registered successfully",
-    { user }
+    MESSAGES.USER_REGISTERED ?? "Admin registered",
+    { user },
   );
 });
 // endregion
 
-// region login controller
+// region login (ADMIN & EMPLOYEE)
 const login = asyncHandler(async (req, res) => {
-  const { email = "", password = "" } = req?.body ?? {};
+  const { email = "", password = "" } = req.body ?? {};
 
-  const user = await findUserByEmail(email?.toLowerCase?.());
+  const user = await findUserByEmail(email.toLowerCase());
   if (!user) {
     return apiResponse(
       res,
       STATUS_CODES.UNAUTHORIZED,
       false,
-      MESSAGES.INVALID_CREDENTIALS ?? "Invalid credentials"
+      MESSAGES.INVALID_CREDENTIALS ?? "Invalid credentials",
     );
   }
 
-  const match = await user.comparePassword(password ?? "");
+  const match = await user.comparePassword(password);
   if (!match) {
     return apiResponse(
       res,
       STATUS_CODES.UNAUTHORIZED,
       false,
-      MESSAGES.INVALID_CREDENTIALS ?? "Invalid credentials"
+      MESSAGES.INVALID_CREDENTIALS ?? "Invalid credentials",
     );
   }
 
-  const token = signToken({ id: user?._id ?? "", email: user?.email ?? "" });
+  const token = signToken({
+    id: user._id,
+    role: user.role,
+    email: user.email,
+  });
+
+  delete user.password;
 
   return apiResponse(
     res,
     STATUS_CODES.SUCCESS,
     true,
     MESSAGES.LOGIN_SUCCESS ?? "Login successful",
-    { user, token }
+    { user, token },
   );
 });
 // endregion
 
-// region logout controller
+// region logout
 const logout = asyncHandler(async (req, res) => {
-  const user = req?.user ?? {};
+  const email = req?.user?.email;
 
   return apiResponse(
     res,
     STATUS_CODES.SUCCESS,
     true,
-    MESSAGES.LOGOUT_SUCCESS?.replace("{email}", user?.email ?? "") ??
-      `User ${user?.email ?? ""} logged out successfully`
+    MESSAGES.LOGOUT_SUCCESS?.replace("{email}", email) ??
+      `User ${email} logged out`,
   );
 });
 // endregion
 
-// region get current user controller
+// region current user
 const getCurrentUser = asyncHandler(async (req, res) => {
-  const user = req?.user ?? {};
-
-  if (!user?._id) {
-    return apiResponse(
-      res,
-      STATUS_CODES.UNAUTHORIZED,
-      false,
-      MESSAGES.UNAUTHORIZED ?? "Not authorized"
-    );
-  }
-
   return apiResponse(
     res,
     STATUS_CODES.SUCCESS,
     true,
-    MESSAGES.USER_FETCHED ?? "Current user fetched",
-    { user }
+    MESSAGES.USER_FETCHED ?? "Current user",
+    { user: req.user },
   );
 });
 // endregion
 
 // region exports
-module.exports = { register, login, logout, getCurrentUser };
+module.exports = {
+  register,
+  login,
+  logout,
+  getCurrentUser,
+};
 // endregion

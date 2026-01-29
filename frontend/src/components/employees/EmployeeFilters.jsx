@@ -1,5 +1,5 @@
 // region imports
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { VALID_DEPARTMENTS } from "../../validations/employeeValidation";
 // endregion
 
@@ -10,26 +10,28 @@ const EmployeeFilters = ({ onFilter = () => {} }) => {
   const [department, setDepartment] = useState("");
   // endregion
 
-  // region handleApply
-  const handleApply = () => {
-    onFilter?.({
-      search: search?.trim?.() ?? "",
-      department: department ?? "",
-    });
-  };
+  // region keep latest onFilter without triggering effect
+  const onFilterRef = useRef(onFilter);
+  useEffect(() => {
+    onFilterRef.current = onFilter;
+  }, [onFilter]);
   // endregion
 
-  // region handleClear
-  const handleClear = () => {
-    setSearch("");
-    setDepartment("");
-    onFilter?.({ search: "", department: "" });
-  };
+  // region debounced live filtering (ONLY when values change)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onFilterRef.current?.({
+        search: search?.trim?.() ?? "",
+        department: department ?? "",
+      });
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [search, department]); // ❗ no onFilter here
   // endregion
 
   return (
     <div className='d-flex gap-2 align-items-center mb-3 flex-wrap'>
-      {/* Search input */}
       <input
         type='text'
         className='form-control'
@@ -38,7 +40,6 @@ const EmployeeFilters = ({ onFilter = () => {} }) => {
         onChange={(e) => setSearch(e?.target?.value ?? "")}
       />
 
-      {/* Department dropdown */}
       <select
         className='form-select'
         value={department ?? ""}
@@ -51,16 +52,6 @@ const EmployeeFilters = ({ onFilter = () => {} }) => {
           </option>
         ))}
       </select>
-
-      {/* Apply filters */}
-      <button className='btn btn-primary' onClick={handleApply}>
-        Filter
-      </button>
-
-      {/* Clear filters */}
-      <button className='btn btn-outline-secondary' onClick={handleClear}>
-        Clear
-      </button>
     </div>
   );
 };
