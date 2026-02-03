@@ -1,0 +1,248 @@
+// region regex constants
+
+export const NAME_REGEX = /^(?=.*[\p{L}\p{M}])[\p{L}\p{M}\d\s'-]+$/u; 
+export const CITY_STATE_REGEX = /^[A-Za-z ]{2,50}$/; 
+export const PHONE_REGEX = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/; 
+export const ZIP_REGEX = /^\d{5,6}$/; 
+export const EMAIL_REGEX = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
+
+// Lists from backend
+export const RESERVED_NAMES = [
+  'admin', 'root', 'system', 'null', 'undefined', 'administrator',
+  'superuser', 'moderator', 'owner', 'support', 'help', 'service',
+  'bot', 'api', 'test', 'demo', 'guest', 'anonymous', 'user',
+  'default', 'public', 'private', 'internal', 'external'
+];
+
+export const DISPOSABLE_DOMAINS = [
+  'tempmail.com', 'guerrillamail.com', '10minutemail.com',
+  'throwaway.email', 'mailinator.com', 'trashmail.com',
+  'temp-mail.org', 'fakeinbox.com', 'sharklasers.com'
+];
+
+export const COMMON_DOMAIN_TYPOS = {
+  'gmial.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gmil.com': 'gmail.com',
+  'yahooo.com': 'yahoo.com', 'yaho.com': 'yahoo.com',
+  'hotmial.com': 'hotmail.com', 'hotmil.com': 'hotmail.com',
+  'outlok.com': 'outlook.com'
+};
+
+export const COMMON_PASSWORDS = [
+  'password', 'password123', '12345678', 'qwerty', 'abc123',
+  'monkey', 'letmein', 'trustno1', 'dragon', 'baseball',
+  'iloveyou', 'master', 'sunshine', 'ashley', 'bailey',
+  'passw0rd', 'shadow', 'superman', 'qazwsx', 'michael',
+  'football', 'welcome', 'jesus', 'ninja', 'mustang',
+  'password1', 'admin', 'admin123', 'root', 'toor'
+];
+
+export const VALID_DEPARTMENTS = [
+  "HR", "Sales", "Marketing", "Tester", "Frontend Developer",
+  "Backend Developer", "Full Stack Developer", "Machine Learning",
+  "Deep Learning", "Network", "Cyber Security", "DevOps"
+];
+// endregion
+
+// region name validation
+export const nameValidation = (name = "") => {
+  if (typeof name !== "string") return "Name must be a string";
+
+  const trimmed = name.trim();
+  if (!trimmed) return "Name cannot be empty";
+  
+  // Reserved word check
+  if (RESERVED_NAMES.includes(trimmed.toLowerCase())) return "This name is reserved";
+  
+  // Excessive spaces
+  if (/\s{2,}/.test(trimmed)) return "Name cannot contain multiple consecutive spaces";
+  
+  // Special chars start/end
+  if (/^[-']|[-']$/.test(trimmed)) return "Name cannot start or end with special characters";
+
+  if (trimmed.length < 3) return "Name must be at least 3 characters";
+  if (trimmed.length > 50) return "Name cannot exceed 50 characters";
+  
+  if (!NAME_REGEX.test(trimmed)) return "Name contains invalid characters";
+  
+  return "";
+};
+// endregion
+
+// region email validation
+export const emailValidation = (email = "", type = "employee") => {
+  if (typeof email !== "string") return "Email must be a string";
+
+  const trimmed = email.trim().toLowerCase();
+  
+  if (!trimmed) return "Email cannot be empty";
+  if (trimmed.length > 254) return "Email is too long";
+
+  if (!EMAIL_REGEX.test(trimmed)) return "Invalid email format";
+
+  const domain = trimmed.split("@")[1] || "";
+  
+  // Disposable check
+  if (DISPOSABLE_DOMAINS.includes(domain)) return "Disposable email addresses are not allowed";
+  
+  // Typo check
+  if (COMMON_DOMAIN_TYPOS[domain]) {
+      return `Did you mean ${trimmed.split('@')[0]}@${COMMON_DOMAIN_TYPOS[domain]}?`;
+  }
+
+  if (type === "employee" && domain !== "spanemployee.com") {
+    return "Employee email must end with @spanemployee.com";
+  }
+
+  return "";
+};
+// endregion
+
+
+// region password validation
+export const passwordValidation = (password = "") => {
+  if (!password) return "Password is required";
+  
+  if (password.length < 8) return "Password must be at least 8 characters";
+  if (password.length > 128) return "Password cannot exceed 128 characters";
+  
+  if (!/[A-Z]/.test(password)) return "Password must contain an uppercase letter";
+  if (!/[a-z]/.test(password)) return "Password must contain a lowercase letter";
+  if (!/[0-9]/.test(password)) return "Password must contain a number";
+  if (!/[!@#$%^&*]/.test(password)) return "Password must contain a special character (!@#$%^&*)";
+
+  const passwordLower = password.toLowerCase();
+  
+  // Common passwords
+  for (const common of COMMON_PASSWORDS) {
+    if (passwordLower.includes(common)) return "This password is too common";
+  }
+  
+  // Repeated chars
+  if (/(.)\1{2,}/.test(password)) return "Password cannot contain repeated characters";
+  
+  // Sequential chars
+  const sequences = ['012', '123', '234', '345', '456', '567', '678', '789', 'abc', 'bcd', 'cde', 'def'];
+  for (const seq of sequences) {
+    if (passwordLower.includes(seq)) return "Password cannot contain sequential characters";
+  }
+
+  return "";
+};
+// endregion
+
+
+// region department validation
+export const departmentValidation = (department = "") => {
+   const dept = department?.trim() ?? "";
+  if (!dept) return "Department is required";
+  if (!VALID_DEPARTMENTS.includes(dept)) return "Invalid department";
+  return ""; // valid
+};
+// endregion
+
+// region phone validation
+export const phoneValidation = (phone = "") => {
+  if (typeof phone !== "string") return "Phone must be a string";
+
+  const trimmed = phone.trim();
+  if (!trimmed) return "Phone number is required";
+  if (!PHONE_REGEX.test(trimmed)) return "Invalid phone format";
+  return "";
+};
+// endregion
+
+// region address validation
+export const addressValidation = (address = {}) => {
+  if (typeof address !== "object" || address === null) return { general: "Address must be an object" };
+
+  const errors = {};
+  const { line1, line2, city, state, zipCode } = address;
+
+  // line1
+  if (!line1?.trim()) errors.line1 = "Address Line 1 is required";
+  else if (line1.trim().length < 5) errors.line1 = "Address Line 1 must be at least 5 characters";
+  else if (line1.trim().length > 100) errors.line1 = "Address Line 1 cannot exceed 100 characters";
+
+  // line2 is optional
+  if (line2 && line2.trim().length > 100) errors.line2 = "Address Line 2 cannot exceed 100 characters";
+
+  // City
+  if (!city?.trim()) errors.city = "City is required";
+  else if (city.trim().length < 2) errors.city = "City must be at least 2 characters";
+  else if (city.trim().length > 50) errors.city = "City cannot exceed 50 characters";
+  else if (!CITY_STATE_REGEX.test(city.trim())) errors.city = "City can only contain letters and spaces";
+
+  // State
+  if (!state?.trim()) errors.state = "State is required";
+  else if (state.trim().length < 2) errors.state = "State must be at least 2 characters";
+  else if (state.trim().length > 50) errors.state = "State cannot exceed 50 characters";
+  else if (!CITY_STATE_REGEX.test(state.trim())) errors.state = "State can only contain letters and spaces";
+
+  // zipCode
+  if (!zipCode?.trim()) errors.zipCode = "ZIP code is required";
+  else if (!ZIP_REGEX.test(zipCode.trim())) errors.zipCode = "ZIP code must be 5 or 6 digits";
+
+  return errors;
+};
+// endregion
+
+// region full employee validation
+export const validateEmployee = (data = {}, isEdit = false) => {
+  const errors = {};
+
+  // Name
+  if (!data.name) errors.name = "Name is required";
+  else {
+    const nameErr = nameValidation(data.name);
+    if (nameErr) errors.name = nameErr;
+  }
+
+  // Email (if creating)
+  if (!isEdit) {
+    if (!data.email) errors.email = "Email is required";
+    else {
+      const emailErr = emailValidation(data.email, "employee", isEdit);
+      if (emailErr) errors.email = emailErr;
+    }
+    
+    // Password (if creating)
+    if (!data.password) errors.password = "Password is required";
+    else {
+      const passErr = passwordValidation(data.password);
+      if (passErr) errors.password = passErr;
+
+      // Confirm Password
+      if (data.confirmPassword !== data.password) {
+        errors.confirmPassword = "Passwords do not match";
+      }
+    }
+  }
+
+  // Department
+  if (!data.department) errors.department = "Department is required";
+  else {
+    const deptErr = departmentValidation(data.department);
+    if (deptErr) errors.department = deptErr;
+  }
+
+  // Phone
+  if (!data.phone) errors.phone = "Phone is required";
+  else {
+    const phoneErr = phoneValidation(data.phone);
+    if (phoneErr) errors.phone = phoneErr;
+  }
+
+  // Address
+  if (!data.address || typeof data.address !== 'object') {
+     errors["address.line1"] = "Address is required";
+  } else {
+     const addrErrors = addressValidation(data.address);
+     // Map address errors to dot notation
+     Object.keys(addrErrors).forEach(key => {
+         errors[`address.${key}`] = addrErrors[key];
+     });
+  }
+
+  return errors;
+};
+// endregion

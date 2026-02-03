@@ -1,0 +1,328 @@
+// region imports
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import {
+  fetchEmployees,
+  fetchEmployeeById,
+  createEmployee,
+  updateEmployee,
+  deleteEmployee,
+} from "../../services/employeeService";
+import { showToast } from "../toast/toastSlice";
+// endregion
+
+// region initialState
+const initialState = {
+  // Normalized state: id => employee object
+  byId: {},
+  // List of employee IDs in order
+  allIds: [],
+  // Single employee being viewed
+  currentEmployee: null,
+  // Pagination info
+  pagination: {
+    skip: 0,
+    limit: 5,
+    total: 0,
+    currentPage: 1,
+  },
+  // Filters for current list
+  filters: {
+    search: "",
+    department: "",
+  },
+  // UI state
+  loading: false,
+  currentEmployeeLoading: false,
+  error: null,
+};
+// endregion
+
+// region Async Thunks
+
+// region getEmployees
+export const getEmployees = createAsyncThunk(
+  "employees/getEmployees",
+  async (
+    { skip = 0, limit = 5, search = "", department = "", ignoreFilters = false } = {},
+    { rejectWithValue } = {}
+  ) => {
+    try {
+      const res = await fetchEmployees({ skip, limit, search, department, ignoreFilters });
+      return {
+        items: res?.data?.data?.employees ?? [],
+        count: res?.data?.data?.total ?? 0,
+      };
+    } catch (err) {
+      return rejectWithValue(err?.response?.data?.message ?? "Failed to fetch employees");
+    }
+  }
+);
+
+// endregion
+
+// region getEmployee
+export const getEmployee = createAsyncThunk(
+  "employees/getEmployee",
+  async (id = null, { rejectWithValue } = {}) => {
+    /* Fetch single employee by ID */
+    try {
+      const res = await fetchEmployeeById?.(id ?? null);
+      // Controller sends: { data: employeeObject }
+      return res?.data?.data ?? null;
+    } catch (err) {
+      return rejectWithValue?.(
+        err?.response?.data?.message ?? "Failed to fetch employee"
+      );
+    }
+  }
+);
+// endregion
+
+// region addEmployee
+export const addEmployee = createAsyncThunk(
+  "employees/addEmployee",
+  async (data = {}, { rejectWithValue, dispatch } = {}) => {
+    /* Add a new employee */
+    try {
+      const res = await createEmployee?.(data ?? {});
+      dispatch?.(showToast?.({ message: "Employee added!", type: "success" }));
+      return res?.data ?? {};
+    } catch (err) {
+      const backend = err?.response?.data ?? {};
+
+         // Validation errors
+      if (backend?.error && typeof backend.error === "object") {
+        return rejectWithValue({
+          fieldErrors: backend.error,
+          message: "Validation failed",
+        });
+      }
+
+
+      return rejectWithValue?.({
+        message:
+          backend?.message ??
+          err?.message ??
+          "Failed to add employee",
+      });
+    }
+  }
+);
+// endregion
+
+// region editEmployee
+export const editEmployee = createAsyncThunk(
+  "employees/editEmployee",
+  async ({ id = null, data = {} } = {}, { rejectWithValue } = {}) => {
+    /* Update existing employee */
+    try {
+      const res = await updateEmployee?.(id ?? null, data ?? {});
+      return res?.data ?? null;
+    } catch (err) {
+      return rejectWithValue?.(
+        err?.response?.data?.message ?? "Failed to update employee"
+      );
+    }
+  }
+);
+// endregion
+
+// region removeEmployee
+export const removeEmployee = createAsyncThunk(
+  "employees/removeEmployee",
+  async (id = null, { rejectWithValue } = {}) => {
+    /* Delete employee */
+    try {
+      await deleteEmployee?.(id ?? null);
+      return id ?? null;
+    } catch (err) {
+      return rejectWithValue?.(
+        err?.response?.data?.message ?? "Failed to delete employee"
+      );
+    }
+  }
+);
+// endregion
+
+
+
+
+// endregion
+
+// region slice
+const employeeSlice = createSlice({
+  name: "employees",
+  initialState,
+  reducers: {
+    // region clearCurrentEmployee
+    clearCurrentEmployee: (state = {}) => {
+      /* Reset current employee state */
+      state.currentEmployee = null;
+      state.currentEmployeeLoading = false;
+      state.error = null;
+    },
+    // endregion
+
+    // region setFilters
+    setFilters: (state = {}, action = {}) => {
+      /* Update filter state */
+      state.filters = {
+        ...state.filters,
+        ...action?.payload,
+      };
+      // Reset to first page when filters change
+      state.pagination.skip = 0;
+      state.pagination.currentPage = 1;
+    },
+    // endregion
+
+    // region setPage
+    setPage: (state = {}, action = {}) => {
+      /* Update current page */
+      const page = action?.payload ?? 1;
+      state.pagination.currentPage = page;
+      state.pagination.skip = (page - 1) * state.pagination.limit;
+    },
+    // endregion
+
+    // region clearError
+    clearError: (state = {}) => {
+      /* Clear error state */
+      state.error = null;
+    },
+    // endregion
+  },
+  extraReducers: (builder) => {
+    builder
+
+      // region getEmployees reducers
+      .addCase(getEmployees?.pending, (state = {}) => {
+        /* Loading employees */
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getEmployees?.fulfilled, (state = {}, action = {}) => {
+        /* Employees fetched - normalize data */
+        state.loading = false;
+        const items = action?.payload?.items ?? [];
+        const total = action?.payload?.count ?? 0;
+
+        // Build normalized state
+        state.byId = {};
+        state.allIds = [];
+
+        items.forEach((emp) => {
+          if (emp?._id) {
+            state.byId[emp._id] = emp;
+            state.allIds.push(emp._id);
+          }
+        });
+
+        // Update pagination
+        state.pagination.total = total;
+      })
+      .addCase(getEmployees?.rejected, (state = {}, action = {}) => {
+        /* Employees fetch failed */
+        state.loading = false;
+        state.error = action?.payload ?? "Unknown error";
+      })
+      // endregion
+
+      // region getEmployee reducers
+      .addCase(getEmployee?.pending, (state = {}) => {
+        state.currentEmployeeLoading = true;
+        state.error = null;
+      })
+      .addCase(getEmployee?.fulfilled, (state = {}, action = {}) => {
+        state.currentEmployeeLoading = false;
+        state.currentEmployee = action?.payload ?? null;
+        // Also add to normalized state
+        if (action?.payload?._id) {
+          state.byId[action.payload._id] = action.payload;
+        }
+      })
+      .addCase(getEmployee?.rejected, (state = {}, action = {}) => {
+        state.currentEmployeeLoading = false;
+        state.error = action?.payload ?? "Unknown error";
+      })
+      // endregion
+
+      // region addEmployee reducers
+      .addCase(addEmployee?.pending, (state = {}) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(addEmployee?.fulfilled, (state = {}, action = {}) => {
+        state.loading = false;
+        const employee = action?.payload ?? {};
+
+        // Add to normalized state
+        if (employee?._id) {
+          state.byId[employee._id] = employee;
+          // Add to front of list if not already present
+          if (!state.allIds.includes(employee._id)) {
+            state.allIds.unshift(employee._id);
+          }
+        }
+      })
+      .addCase(addEmployee?.rejected, (state = {}, action = {}) => {
+        state.loading = false;
+        state.error = action?.payload ?? "Unknown error";
+      })
+      // endregion
+
+      // region editEmployee reducers
+      .addCase(editEmployee?.pending, (state = {}) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editEmployee?.fulfilled, (state = {}, action = {}) => {
+        state.loading = false;
+        const updatedEmp = action?.payload?.employee ?? action?.payload ?? null;
+
+        if (updatedEmp?._id) {
+          // Update normalized state
+          state.byId[updatedEmp._id] = updatedEmp;
+          // Update current employee if it's the same one
+          if (state.currentEmployee?._id === updatedEmp._id) {
+            state.currentEmployee = updatedEmp;
+          }
+        }
+      })
+      .addCase(editEmployee?.rejected, (state = {}, action = {}) => {
+        state.loading = false;
+        state.error = action?.payload ?? "Unknown error";
+      })
+      // endregion
+
+      // region removeEmployee reducers
+      .addCase(removeEmployee?.pending, (state = {}) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(removeEmployee?.fulfilled, (state = {}, action = {}) => {
+        state.loading = false;
+        const employeeId = action?.payload;
+
+        // Remove from normalized state
+        delete state.byId[employeeId];
+        state.allIds = state.allIds.filter((id) => id !== employeeId);
+
+        // Clear current employee if deleted
+        if (state.currentEmployee?._id === employeeId) {
+          state.currentEmployee = null;
+        }
+      })
+      .addCase(removeEmployee?.rejected, (state = {}, action = {}) => {
+        state.loading = false;
+        state.error = action?.payload ?? "Unknown error";
+      });
+    // endregion
+  },
+});
+// endregion
+
+// region exports
+export const { clearCurrentEmployee, setFilters, setPage, clearError } = employeeSlice?.actions ?? {};
+export default employeeSlice?.reducer;
+// endregion
