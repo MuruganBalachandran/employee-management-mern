@@ -15,17 +15,17 @@ import app from './app.js';
 const startServer = async () => {
   try {
     // wait for DB connection before starting server
-    await connectDB?.();
+    await connectDB();
 
     // start express server only after DB is ready
-    app?.listen?.(env?.PORT ?? 3000, () => {
-      console?.log?.(chalk?.green?.(`Server running on port ${env?.PORT ?? 3000}`));
+    app.listen(env?.PORT || 3000, () => {
+      console.log(chalk.green(`Server running on port ${env?.PORT || 3000}`));
     });
 
   } catch (err) {
     // log startup error and exit
-    console?.error?.(chalk?.red?.('Server startup failed:'), err?.message ?? 'Unknown startup error');
-    process?.exit?.(1);
+    console.error(chalk.red('Server startup failed:'), err?.message || 'Unknown startup error');
+    process.exit(1);
   }
 };
 

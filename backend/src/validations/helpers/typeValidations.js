@@ -190,7 +190,7 @@ const validateEmail = (value = "") => {
 
   // DISPOSABLE EMAIL CHECK
   if (DISPOSABLE_DOMAINS?.includes?.(domain)) {
-    return VALIDATION_MESSAGES?.EMAIL_DISPOSABLE ?? 'Disposable email addresses are not allowed';
+    return VALIDATION_MESSAGES?.EMAIL_DISPOSABLE || 'Disposable email addresses are not allowed';
   }
 
   // COMMON TYPO CHECK
@@ -337,37 +337,37 @@ const validatePassword = (value = "", context = {}) => {
 const validateAge = (value) => {
   // FALSY VALUE CHECK - but allow 0 as valid age (though unrealistic)
   if (value === undefined || value === null || value === '' || value === false) {
-    return VALIDATION_MESSAGES?.AGE_REQUIRED ?? 'Age is required';
+    return VALIDATION_MESSAGES?.AGE_REQUIRED || 'Age is required';
   }
 
   // STRICT TYPE CHECK - prevent type coercion from strings
   if (typeof value !== 'number') {
-    return VALIDATION_MESSAGES?.AGE_STRING ?? 'Age must be a number';
+    return VALIDATION_MESSAGES?.AGE_STRING || 'Age must be a number';
   }
 
   // NaN CHECK
   if (Number?.isNaN?.(value)) {
-    return VALIDATION_MESSAGES?.AGE_VALID ?? 'Age must be a valid number';
+    return VALIDATION_MESSAGES?.AGE_VALID || 'Age must be a valid number';
   }
 
   // INFINITY CHECK
   if (!Number?.isFinite?.(value)) {
-    return VALIDATION_MESSAGES?.AGE_FINITE ?? 'Age must be a finite number';
+    return VALIDATION_MESSAGES?.AGE_FINITE || 'Age must be a finite number';
   }
 
   // INTEGER CHECK
   if (!Number?.isInteger?.(value)) {
-    return VALIDATION_MESSAGES?.AGE_WHOLE ?? 'Age must be a whole number';
+    return VALIDATION_MESSAGES?.AGE_WHOLE || 'Age must be a whole number';
   }
 
   // MINIMUM AGE CHECK (COPPA compliance - 13 years)
   if (value < 10) {
-    return VALIDATION_MESSAGES?.AGE_MIN ?? 'You must be at least 10 years old';
+    return VALIDATION_MESSAGES?.AGE_MIN || 'You must be at least 10 years old';
   }
 
   // MAXIMUM AGE CHECK (realistic limit)
   if (value > 120) {
-    return VALIDATION_MESSAGES?.AGE_MAX ?? 'Please enter a valid age';
+    return VALIDATION_MESSAGES?.AGE_MAX || 'Please enter a valid age';
   }
 
   return null;
@@ -381,18 +381,18 @@ const validateAge = (value) => {
 const validateRole = (value = "employee") => {
   //  REQUIRED
   if (value === undefined || value === null) {
-    return VALIDATION_MESSAGES?.ROLE_REQUIRED ?? 'Role is required';
+    return VALIDATION_MESSAGES?.ROLE_REQUIRED || 'Role is required';
   }
 
   //  TYPE CHECK
   if (typeof value !== 'string') {
-    return VALIDATION_MESSAGES?.ROLE_STRING ?? 'Role must be a string';
+    return VALIDATION_MESSAGES?.ROLE_STRING || 'Role must be a string';
   }
 
   //  ALLOWED VALUES
   const allowed = [ROLE.SUPER_ADMIN, ROLE.ADMIN, ROLE.EMPLOYEE];
   if (!allowed?.includes?.(value)) {
-    return VALIDATION_MESSAGES?.ROLE_INVALID ?? 'Invalid role';
+    return VALIDATION_MESSAGES?.ROLE_INVALID || 'Invalid role';
   }
 
   return null;
@@ -403,10 +403,10 @@ const validateRole = (value = "employee") => {
  */
 const validateDepartment = (value = "") => {
   if (!value || value?.trim?.()?.length === 0) {
-    return VALIDATION_MESSAGES?.DEPARTMENT_REQUIRED ?? 'Department is required';
+    return VALIDATION_MESSAGES?.DEPARTMENT_REQUIRED || 'Department is required';
   }
   if (typeof value !== 'string') {
-    return VALIDATION_MESSAGES?.DEPARTMENT_STRING ?? 'Department must be a string';
+    return VALIDATION_MESSAGES?.DEPARTMENT_STRING || 'Department must be a string';
   }
   return null;
 };
@@ -416,15 +416,15 @@ const validateDepartment = (value = "") => {
  */
 const validatePhone = (value = "") => {
   if (!value || value?.trim?.()?.length === 0) {
-    return VALIDATION_MESSAGES?.PHONE_REQUIRED ?? 'Phone number is required';
+    return VALIDATION_MESSAGES?.PHONE_REQUIRED || 'Phone number is required';
   }
   if (typeof value !== 'string') {
-    return VALIDATION_MESSAGES?.PHONE_STRING ?? 'Phone number must be a string';
+    return VALIDATION_MESSAGES?.PHONE_STRING || 'Phone number must be a string';
   }
   // Basic regex for phone (digits, spaces, plus, hyphens)
   const phoneRegex = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
   if (!phoneRegex.test(value.trim())) {
-    return VALIDATION_MESSAGES?.PHONE_FORMAT ?? 'Invalid phone format';
+    return VALIDATION_MESSAGES?.PHONE_FORMAT || 'Invalid phone format';
   }
   return null;
 };
@@ -435,22 +435,22 @@ const validatePhone = (value = "") => {
  */
 const validateAddress = (value = {}) => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return VALIDATION_MESSAGES?.ADDRESS_REQUIRED ?? 'Address is required';
+    return VALIDATION_MESSAGES?.ADDRESS_REQUIRED || 'Address is required';
   }
 
   const { line1, city, state, zipCode } = value;
 
   if (!line1 || line1?.trim?.()?.length === 0) {
-    return VALIDATION_MESSAGES?.ADDRESS_LINE1_REQUIRED ?? 'Address line 1 is required';
+    return VALIDATION_MESSAGES?.ADDRESS_LINE1_REQUIRED || 'Address line 1 is required';
   }
   if (!city || city?.trim?.()?.length === 0) {
-    return VALIDATION_MESSAGES?.CITY_REQUIRED ?? 'City is required';
+    return VALIDATION_MESSAGES?.CITY_REQUIRED || 'City is required';
   }
   if (!state || state?.trim?.()?.length === 0) {
-    return VALIDATION_MESSAGES?.STATE_REQUIRED ?? 'State is required';
+    return VALIDATION_MESSAGES?.STATE_REQUIRED || 'State is required';
   }
   if (!zipCode || zipCode?.trim?.()?.length === 0) {
-    return VALIDATION_MESSAGES?.ZIPCODE_REQUIRED ?? 'Zip code is required';
+    return VALIDATION_MESSAGES?.ZIPCODE_REQUIRED || 'Zip code is required';
   }
 
   return null;
@@ -464,35 +464,35 @@ const validateAddress = (value = {}) => {
 const validateObjectId = (value = "") => {
   // Use general validation utility for falsy check
   if (isFalsyOrInvalid(value)) {
-    return VALIDATION_MESSAGES?.ID_REQUIRED ?? 'ID is required';
+    return VALIDATION_MESSAGES?.ID_REQUIRED || 'ID is required';
   }
 
   // STRICT TYPE CHECK - prevent type coercion
   if (typeof value !== 'string') {
-    return VALIDATION_MESSAGES?.ID_STRING ?? 'ID must be a string';
+    return VALIDATION_MESSAGES?.ID_STRING || 'ID must be a string';
   }
 
   // TRIM
-  const id = value?.trim?.() ?? "";
+  const id = value?.trim?.() || "";
 
   // EMPTY STRING CHECK
   if (id?.length === 0) {
-    return VALIDATION_MESSAGES?.ID_EMPTY ?? 'ID cannot be empty';
+    return VALIDATION_MESSAGES?.ID_EMPTY || 'ID cannot be empty';
   }
 
   // LENGTH CHECK (MongoDB ObjectId is always 24 characters)
   if (id?.length !== 24) {
-    return VALIDATION_MESSAGES?.ID_LENGTH ?? 'Invalid ID format';
+    return VALIDATION_MESSAGES?.ID_LENGTH || 'Invalid ID format';
   }
 
   // HEXADECIMAL FORMAT CHECK
   if (!/^[a-f0-9]{24}$/i.test(id)) {
-    return VALIDATION_MESSAGES?.ID_HEX ?? 'Invalid ID format (hex)';
+    return VALIDATION_MESSAGES?.ID_HEX || 'Invalid ID format (hex)';
   }
 
   // MONGOOSE VALIDATION
   if (!mongoose?.Types?.ObjectId?.isValid?.(id)) {
-    return VALIDATION_MESSAGES?.ID_MONGO ?? 'Invalid ObjectId';
+    return VALIDATION_MESSAGES?.ID_MONGO || 'Invalid ObjectId';
   }
 
   return null;

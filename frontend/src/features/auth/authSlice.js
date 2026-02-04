@@ -53,12 +53,12 @@ export const login = createAsyncThunk(
 return user;
 
 
-      dispatch?.(showToast?.({ message: "Logged in successfully!", type: "success" }));
+      dispatch(showToast({ message: "Logged in successfully!", type: "success" }));
       return user;
     } catch (err) {
       const message = err?.response?.data?.message || "Login failed";
-      dispatch?.(showToast?.({ message, type: "error" }));
-      return rejectWithValue?.(message);
+      dispatch(showToast({ message, type: "error" }));
+      return rejectWithValue(message);
     }
   }
 );
@@ -71,20 +71,20 @@ return user;
 // region logout
 export const logout = createAsyncThunk(
   "auth/logout",
-  async (_ = null, { dispatch, rejectWithValue }) => {
+    async (_ = null, { dispatch, rejectWithValue }) => {
     /* Logout user and clear token */
     try {
-      await logoutUser?.();
-   localStorage.removeItem("token");
-localStorage.removeItem("user");
+      await logoutUser();
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
 
 
-      dispatch?.(showToast?.({ message: "Logged out", type: "info" }));
+      dispatch(showToast({ message: "Logged out", type: "info" }));
       return null;
     } catch (err) {
       const message = err?.response?.data?.message || "Logout failed";
-      dispatch?.(showToast?.({ message, type: "error" }));
-      return rejectWithValue?.(message);
+      dispatch(showToast({ message, type: "error" }));
+      return rejectWithValue(message);
     }
   }
 );
@@ -96,8 +96,8 @@ export const fetchCurrentUser = createAsyncThunk(
   async (_ = null, { rejectWithValue }) => {
     /* Fetch logged-in user from backend */
     try {
-      const res = await getCurrentUser?.();
-   return res?.data?.data?.user || null;
+      const res = await getCurrentUser();
+      return res?.data?.data?.user || null;
     } catch (err) {
       return rejectWithValue?.(err?.response?.data?.message || "Failed to fetch user");
     }

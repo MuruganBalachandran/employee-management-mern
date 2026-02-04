@@ -68,6 +68,7 @@ const updateProfile = async (req = {}, res = {}) => {
     // Map address from camelCase (API) to PascalCase (DB)
     const mappedAddress = address && typeof address === 'object' ? {
       Line1: address.line1 || address.Line1 || '',
+      Line2: address.line2 || address.Line2 || '',
       City: address.city || address.City || '',
       State: address.state || address.State || '',
       ZipCode: address.zipCode || address.ZipCode || '',

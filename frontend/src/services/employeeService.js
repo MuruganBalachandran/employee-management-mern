@@ -3,14 +3,15 @@ import api from "./api";
 // endregion
 
 // region employee services
+// region employee services
 export const fetchEmployees = ({
-  skip = 0,
+  page = 1,
   limit = 5,
   search = "",
   department = "",
   ignoreFilters = false,
 } = {}) => {
-  const params = { skip, limit };
+  const params = { page, limit };
   if (!ignoreFilters) {
     if (search) params.search = search;
     if (department) params.department = department;

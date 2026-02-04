@@ -40,20 +40,21 @@ const initialState = {
 // region Async Thunks
 
 // region getEmployees
+// region getEmployees
 export const getEmployees = createAsyncThunk(
   "employees/getEmployees",
   async (
-    { skip = 0, limit = 5, search = "", department = "", ignoreFilters = false } = {},
+    { page = 1, limit = 5, search = "", department = "", ignoreFilters = false } = {},
     { rejectWithValue } = {}
   ) => {
     try {
-      const res = await fetchEmployees({ skip, limit, search, department, ignoreFilters });
+      const res = await fetchEmployees({ page, limit, search, department, ignoreFilters });
       return {
-        items: res?.data?.data?.employees ?? [],
-        count: res?.data?.data?.total ?? 0,
+        items: res?.data?.data?.employees || [],
+        count: res?.data?.data?.total || 0,
       };
     } catch (err) {
-      return rejectWithValue(err?.response?.data?.message ?? "Failed to fetch employees");
+      return rejectWithValue(err?.response?.data?.message || "Failed to fetch employees");
     }
   }
 );
@@ -66,12 +67,12 @@ export const getEmployee = createAsyncThunk(
   async (id = null, { rejectWithValue } = {}) => {
     /* Fetch single employee by ID */
     try {
-      const res = await fetchEmployeeById?.(id ?? null);
+      const res = await fetchEmployeeById(id || null);
       // Controller sends: { data: employeeObject }
-      return res?.data?.data ?? null;
+      return res?.data?.data || null;
     } catch (err) {
-      return rejectWithValue?.(
-        err?.response?.data?.message ?? "Failed to fetch employee"
+      return rejectWithValue(
+        err?.response?.data?.message || "Failed to fetch employee"
       );
     }
   }
@@ -84,11 +85,11 @@ export const addEmployee = createAsyncThunk(
   async (data = {}, { rejectWithValue, dispatch } = {}) => {
     /* Add a new employee */
     try {
-      const res = await createEmployee?.(data ?? {});
-      dispatch?.(showToast?.({ message: "Employee added!", type: "success" }));
-      return res?.data ?? {};
+      const res = await createEmployee(data || {});
+      dispatch(showToast({ message: "Employee added!", type: "success" }));
+      return res?.data || {};
     } catch (err) {
-      const backend = err?.response?.data ?? {};
+      const backend = err?.response?.data || {};
 
          // Validation errors
       if (backend?.error && typeof backend.error === "object") {
@@ -99,10 +100,10 @@ export const addEmployee = createAsyncThunk(
       }
 
 
-      return rejectWithValue?.({
+      return rejectWithValue({
         message:
-          backend?.message ??
-          err?.message ??
+          backend?.message ||
+          err?.message ||
           "Failed to add employee",
       });
     }
@@ -116,11 +117,11 @@ export const editEmployee = createAsyncThunk(
   async ({ id = null, data = {} } = {}, { rejectWithValue } = {}) => {
     /* Update existing employee */
     try {
-      const res = await updateEmployee?.(id ?? null, data ?? {});
-      return res?.data ?? null;
+      const res = await updateEmployee(id || null, data || {});
+      return res?.data || null;
     } catch (err) {
-      return rejectWithValue?.(
-        err?.response?.data?.message ?? "Failed to update employee"
+      return rejectWithValue(
+        err?.response?.data?.message || "Failed to update employee"
       );
     }
   }
@@ -133,11 +134,11 @@ export const removeEmployee = createAsyncThunk(
   async (id = null, { rejectWithValue } = {}) => {
     /* Delete employee */
     try {
-      await deleteEmployee?.(id ?? null);
-      return id ?? null;
+      await deleteEmployee(id || null);
+      return id || null;
     } catch (err) {
-      return rejectWithValue?.(
-        err?.response?.data?.message ?? "Failed to delete employee"
+      return rejectWithValue(
+        err?.response?.data?.message || "Failed to delete employee"
       );
     }
   }
@@ -323,6 +324,6 @@ const employeeSlice = createSlice({
 // endregion
 
 // region exports
-export const { clearCurrentEmployee, setFilters, setPage, clearError } = employeeSlice?.actions ?? {};
+export const { clearCurrentEmployee, setFilters, setPage, clearError } = employeeSlice?.actions || {};
 export default employeeSlice?.reducer;
 // endregion

@@ -57,9 +57,9 @@ const signup = async (req = {}, res = {}) => {
     // - Super Admin: allow dynamic role (defaults to admin if used for creation)
     // - Admin: allow dynamic role (defaults to employee if used for creation)
     let finalRole = ROLE.EMPLOYEE;
-    if (req.user && req.user.Role === ROLE.SUPER_ADMIN) {
+    if (req?.user && req?.user?.Role === ROLE.SUPER_ADMIN) {
       finalRole = role || ROLE.ADMIN;
-    } else if (req.user && req.user.Role === ROLE.ADMIN) {
+    } else if (req?.user && req?.user?.Role === ROLE.ADMIN) {
       finalRole = ROLE.EMPLOYEE;
     }
 

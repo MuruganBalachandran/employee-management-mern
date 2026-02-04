@@ -14,6 +14,8 @@ import {
   deleteUserAccount,
   findUserById,
 } from '../../queries/index.js';
+
+import { validateObjectId } from '../../validations/helpers/typeValidations.js';
 // endregion
 
 // region create admin
@@ -25,6 +27,17 @@ const createAdmin = signup;
 const removeAdmin = async (req = {}, res = {}) => {
   try {
     const { id = '' } = req.params || {};
+
+    const idError = validateObjectId(id);
+    if (idError) {
+      return sendResponse(
+        res,
+        STATUS_CODE.BAD_REQUEST,
+        RESPONSE_STATUS.FAILURE,
+        idError
+      );
+    }
+
     const user = await findUserById(id);
 
     if (!user) {
@@ -38,7 +51,7 @@ const removeAdmin = async (req = {}, res = {}) => {
 
     // Ensure target is an admin (Super Admin can delete Admin)
     // hierarchy check: Super Admin can delete Admin, but not other Super Admin
-    if (user.Role === ROLE.SUPER_ADMIN) {
+    if (user?.Role === ROLE.SUPER_ADMIN) {
       return sendResponse(
         res,
         STATUS_CODE.UNAUTHORIZED,
@@ -47,7 +60,7 @@ const removeAdmin = async (req = {}, res = {}) => {
       );
     }
 
-    if (user.Role !== ROLE.ADMIN) {
+    if (user?.Role !== ROLE.ADMIN) {
       // Optional: allow deleting employees too? But strict path says delete-admin
       // Start with strict
     }

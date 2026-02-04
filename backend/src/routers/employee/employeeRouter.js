@@ -1,6 +1,11 @@
+// region imports
+// package imports
 import express from 'express';
+
+// middleware imports
 import { auth } from '../../middleware/index.js';
 
+// controller imports
 import {
   listEmployees,
   getEmployee,
@@ -8,8 +13,11 @@ import {
   updateEmployeeDetails,
   removeEmployee,
 } from '../../controllers/employee/employeeController.js';
+// endregion
 
+// region router initialization
 const router = express.Router();
+// endregion
 
 // All routes here require Admin access
 router.get('/', auth('ADMIN', 'SUPER_ADMIN'), listEmployees);

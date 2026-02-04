@@ -44,7 +44,7 @@ const EmployeeList = ({ onTotalUpdate = () => {} }) => {
   useEffect(() => {
     dispatch(
       getEmployees({
-        skip: (page - 1) * limit,
+        page,
         limit,
         search: filters?.search || "",
         department: filters?.department || "",
@@ -64,8 +64,9 @@ const EmployeeList = ({ onTotalUpdate = () => {} }) => {
   // endregion
 
   // region delete
+  // region delete
   const handleDelete = async (id = "") => {
-    if (!window?.confirm?.("Are you sure you want to delete this employee?"))
+    if (!window.confirm("Are you sure you want to delete this employee?"))
       return;
 
     try {
@@ -82,8 +83,8 @@ const EmployeeList = ({ onTotalUpdate = () => {} }) => {
         getEmployees({
           skip: (page - 1) * limit,
           limit,
-          search: filters?.search ?? "",
-          department: filters?.department ?? "",
+          search: filters?.search || "",
+          department: filters?.department || "",
         }),
       );
     } catch (err) {

@@ -31,20 +31,29 @@ const auth = (...allowedRoles) => {
       if (!token) {
         return sendResponse(
           res,
-          STATUS_CODE?.UNAUTHORIZED ?? 401,
+          STATUS_CODE?.UNAUTHORIZED || 401,
           RESPONSE_STATUS.FAILURE,
           'Please authenticate'
         );
       }
 
       const decoded = verifyToken(token, env.JWT_SECRET);
+      
+      if (!decoded?._id) {
+        return sendResponse(
+          res,
+          STATUS_CODE?.UNAUTHORIZED || 401,
+          RESPONSE_STATUS.FAILURE,
+          'Invalid token'
+        );
+      }
 
       const user = await User.findOne({ _id: decoded._id, Is_Deleted: 0 });
 
       if (!user) {
         return sendResponse(
           res,
-          STATUS_CODE?.UNAUTHORIZED ?? 401,
+          STATUS_CODE?.UNAUTHORIZED || 401,
           RESPONSE_STATUS.FAILURE,
           'Please authenticate'
         );
@@ -60,7 +69,7 @@ const auth = (...allowedRoles) => {
         if (!allowedRoles.includes(userRole)) {
           return sendResponse(
             res,
-            STATUS_CODE?.UNAUTHORIZED ?? 401,
+            STATUS_CODE?.UNAUTHORIZED || 401,
             RESPONSE_STATUS.FAILURE,
             'Unauthorized access'
           );

@@ -14,7 +14,7 @@ const Header = () => {
 
   // region handleLogout
   const handleLogout = () => {
-    if (!window?.confirm?.("Are you sure you want to logout?")) return;
+    if (!window.confirm("Are you sure you want to logout?")) return;
     dispatch(logout());
     navigate("/login");
   };

@@ -18,8 +18,8 @@ const toastSlice = createSlice({
     // region showToast
     showToast: (state = {}, action = {}) => {
       /* Display toast message */
-      state.message = action?.payload?.message ?? "";
-      state.type = action?.payload?.type ?? "info";
+      state.message = action?.payload?.message || "";
+      state.type = action?.payload?.type || "info";
       state.visible = true;
     },
     // endregion
@@ -36,6 +36,6 @@ const toastSlice = createSlice({
 // endregion
 
 // region exports
-export const { showToast, hideToast } = toastSlice?.actions ?? {};
+export const { showToast, hideToast } = toastSlice?.actions || {};
 export default toastSlice?.reducer;
 // endregion

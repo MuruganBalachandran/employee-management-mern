@@ -20,26 +20,28 @@ import {
   deleteEmployee,
   findUserByEmail,
 } from '../../queries/index.js';
+
+import { validateObjectId } from '../../validations/helpers/typeValidations.js';
 // endregion
 
 // region list employees
 const listEmployees = async (req = {}, res = {}) => {
   try {
     // Support both skip/limit (frontend style) and page/limit (traditional style)
-    const limit = Math.min(100, Number(req.query?.limit) || 5);
+    const limit = Math.min(100, Number(req?.query?.limit) || 5);
 
     let skip = 0;
-    if (req.query?.skip !== undefined) {
+    if (req?.query?.skip !== undefined) {
       // Frontend sends skip directly
-      skip = Math.max(0, Number(req.query?.skip) || 0);
+      skip = Math.max(0, Number(req?.query?.skip) || 0);
     } else {
       // Traditional page parameter
-      const page = Math.max(1, Number(req.query?.page) || 1);
+      const page = Math.max(1, Number(req?.query?.page) || 1);
       skip = (page - 1) * limit;
     }
 
-    const search = req.query?.search || '';
-    const department = req.query?.department || '';
+    const search = req?.query?.search || '';
+    const department = req?.query?.department || '';
 
     const result = await getAllEmployees(limit, skip, search, department);
 
@@ -76,6 +78,17 @@ const listEmployees = async (req = {}, res = {}) => {
 const getEmployee = async (req = {}, res = {}) => {
   try {
     const { id = '' } = req.params || {};
+
+    const idError = validateObjectId(id);
+    if (idError) {
+      return sendResponse(
+        res,
+        STATUS_CODE.BAD_REQUEST,
+        RESPONSE_STATUS.FAILURE,
+        idError
+      );
+    }
+
     const employee = await getEmployeeById(id);
 
     if (!employee) {
@@ -149,6 +162,7 @@ const createNewEmployee = async (req = {}, res = {}) => {
     // Map address from camelCase (API) to PascalCase (DB)
     const mappedAddress = address && typeof address === 'object' ? {
       Line1: address.line1 || address.Line1 || '',
+      Line2: address.line2 || address.Line2 || '',
       City: address.city || address.City || '',
       State: address.state || address.State || '',
       ZipCode: address.zipCode || address.ZipCode || '',
@@ -187,6 +201,17 @@ const createNewEmployee = async (req = {}, res = {}) => {
 const updateEmployeeDetails = async (req = {}, res = {}) => {
   try {
     const { id = '' } = req.params || {};
+
+    const idError = validateObjectId(id);
+    if (idError) {
+      return sendResponse(
+        res,
+        STATUS_CODE.BAD_REQUEST,
+        RESPONSE_STATUS.FAILURE,
+        idError
+      );
+    }
+
     const employee = await getEmployeeById(id);
 
     if (!employee) {
@@ -218,6 +243,7 @@ const updateEmployeeDetails = async (req = {}, res = {}) => {
     if (address !== undefined && typeof address === 'object') {
       updateData.Address = {
         Line1: address.line1 || address.Line1 || '',
+        Line2: address.line2 || address.Line2 || '',
         City: address.city || address.City || '',
         State: address.state || address.State || '',
         ZipCode: address.zipCode || address.ZipCode || '',
@@ -249,6 +275,17 @@ const updateEmployeeDetails = async (req = {}, res = {}) => {
 const removeEmployee = async (req = {}, res = {}) => {
   try {
     const { id = '' } = req.params || {};
+
+    const idError = validateObjectId(id);
+    if (idError) {
+      return sendResponse(
+        res,
+        STATUS_CODE.BAD_REQUEST,
+        RESPONSE_STATUS.FAILURE,
+        idError
+      );
+    }
+
     const employee = await getEmployeeById(id);
 
     if (!employee) {
