@@ -6,7 +6,7 @@ import { passwordRules } from "../../validations/authValidation";
 // region PasswordRules component
 const PasswordRules = ({ password = "" }) => {
   // derive rules
-  const rules = passwordRules(password ?? "") ?? {
+  const rules = passwordRules(password || "") || {
     length: false,
     lowercase: false,
     uppercase: false,
@@ -25,7 +25,7 @@ const PasswordRules = ({ password = "" }) => {
         </span>
         {/* text */}
         <span style={{ color: valid ? "#28a745" : "#dc3545" }}>
-          {label ?? ""}
+          {label || ""}
         </span>
       </div>
     );
@@ -35,12 +35,12 @@ const PasswordRules = ({ password = "" }) => {
   // region render
   return (
     <div className='mt-2 small'>
-      <Rule valid={rules?.length ?? false} label='At least 8 characters' />
-      <Rule valid={rules?.lowercase ?? false} label='At least 1 lowercase' />
-      <Rule valid={rules?.uppercase ?? false} label='At least 1 uppercase' />
-      <Rule valid={rules?.number ?? false} label='At least 1 number' />
+      <Rule valid={rules?.length || false} label='At least 8 characters' />
+      <Rule valid={rules?.lowercase || false} label='At least 1 lowercase' />
+      <Rule valid={rules?.uppercase || false} label='At least 1 uppercase' />
+      <Rule valid={rules?.number || false} label='At least 1 number' />
       <Rule
-        valid={rules?.special ?? false}
+        valid={rules?.special || false}
         label='At least 1 special character'
       />
     </div>

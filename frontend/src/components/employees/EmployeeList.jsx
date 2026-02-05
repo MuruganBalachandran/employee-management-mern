@@ -18,6 +18,7 @@ import {
 } from "../../features";
 
 import { Loader, Pagination } from "../../components";
+import { FaEye, FaPen, FaTrash } from "react-icons/fa";
 
 // endregion
 
@@ -122,77 +123,96 @@ const EmployeeList = ({ onTotalUpdate = () => {} }) => {
     );
   // endregion
 
-  // region render
   return (
+    // region container
     <div className='container mt-4'>
-      <h3>Employee List (Total: {count || 0})</h3>
+      {/* Heading with total employees */}
+      <h3 className='mb-3'>Employee List (Total: {count || 0})</h3>
 
-      <table className='table table-bordered table-striped mt-3'>
-        {/* table headers */}
-        <thead className='thead-dark'>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Department</th>
-            <th>Phone</th>
-            <th>Address</th>
-            <th className='text-center'>Actions</th>
-          </tr>
-        </thead>
-
-        {/* table datas */}
-        <tbody>
-          {employees?.map((emp = {}) => (
-            <tr key={emp?._id || Math.random()}>
-              <td>{emp?.Name || "-"}</td>
-              <td>{emp?.Email || "-"}</td>
-              <td>{emp?.Department || "-"}</td>
-              <td>{emp?.Phone || "-"}</td>
-              <td>
-                {emp?.Address?.Line1 || ""}
-                {emp?.Address?.Line2 ? `, ${emp.Address.Line2}` : ""},{" "}
-                {emp?.Address?.City || ""}, {emp?.Address?.State || ""} -{" "}
-                {emp?.Address?.ZipCode || ""}
-              </td>
-
-              {/* action btns */}
-              <td className='text-center'>
-                <div className='d-inline-flex gap-2'>
-                  <button
-                    className='btn btn-sm btn-outline-info'
-                    onClick={() => navigate(`/employees/view/${emp?._id}`)}
-                  >
-                    View
-                  </button>
-                  <button
-                    className='btn btn-sm btn-outline-primary'
-                    onClick={() => handleEdit(emp)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className='btn btn-sm btn-outline-danger'
-                    onClick={() => handleDelete(emp?._id)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </td>
+      {/* Responsive table wrapper */}
+      <div className='table-responsive'>
+        <table className='table table-hover table-bordered align-middle'>
+          {/* Table headers */}
+          <thead className='table-light'>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Department</th>
+              <th>Phone</th>
+              <th>Address</th>
+              <th className='text-center'>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      {/* pagination */}
+          </thead>
+
+          {/* Table data rows */}
+          <tbody>
+            {employees?.map((emp = {}) => (
+              <tr key={emp?._id || Math.random()}>
+                <td>{emp?.Name || "-"}</td>
+                <td>{emp?.Email || "-"}</td>
+                <td>{emp?.Department || "-"}</td>
+                <td>{emp?.Phone || "-"}</td>
+                <td>
+                  {/* Address formatting */}
+                  {[emp?.Address?.Line1, emp?.Address?.Line2]
+                    .filter(Boolean)
+                    .join(", ")}
+                  {emp?.Address?.City ? `, ${emp.Address.City}` : ""}
+                  {emp?.Address?.State ? `, ${emp.Address.State}` : ""}
+                  {emp?.Address?.ZipCode ? ` - ${emp.Address.ZipCode}` : ""}
+                </td>
+
+                {/* Action icons */}
+                {/* Action icons as button-like containers */}
+                <td className='text-center'>
+                  <div className='d-flex justify-content-center gap-2 flex-nowrap'>
+                    {/* View */}
+                    <div
+                      className='d-flex align-items-center justify-content-center border rounded p-1'
+                      style={{ width: 28, height: 28, cursor: "pointer" }}
+                      title='View'
+                      onClick={() => navigate(`/employees/view/${emp?._id}`)}
+                    >
+                      <FaEye size={14} className='text-info' />
+                    </div>
+
+                    {/* Edit */}
+                    <div
+                      className='d-flex align-items-center justify-content-center border rounded p-1'
+                      style={{ width: 28, height: 28, cursor: "pointer" }}
+                      title='Edit'
+                      onClick={() => handleEdit(emp)}
+                    >
+                      <FaPen size={14} className='text-primary' />
+                    </div>
+
+                    {/* Delete */}
+                    <div
+                      className='d-flex align-items-center justify-content-center border rounded p-1'
+                      style={{ width: 28, height: 28, cursor: "pointer" }}
+                      title='Delete'
+                      onClick={() => handleDelete(emp?._id)}
+                    >
+                      <FaTrash size={14} className='text-danger' />
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
       <Pagination
-        page={page || 1}
-        totalPages={totalPages || 1}
+        page={page || 1} // default to page 1
+        totalPages={totalPages || 1} // default to 1 page
         onPageChange={handlePageChange}
       />
     </div>
+    // endregion
   );
-  // endregion
 };
-// endregion
 
 // region exports
 export default EmployeeList;

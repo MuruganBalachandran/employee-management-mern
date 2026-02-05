@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
-import { Input, Loader } from "../../components";
+import { Input, Loader, PasswordRules } from "../../components";
 import { login, selectAuthLoading, showToast } from "../../features";
 
 import {
@@ -56,7 +56,7 @@ const Login = () => {
         ? "Password is required"
         : passwordValidation(password),
     };
-    
+
     // Remove fields that have no errors
     const filteredErrors = Object.fromEntries(
       // Keeps only entries where value is truthy (actual error message).
@@ -78,10 +78,10 @@ const Login = () => {
       setPassword("");
       setFormErrors({});
 
-      // redirect 
+      // redirect
       navigate("/");
     } catch (err) {
-      console.log("error while login:",err)
+      console.log("error while login:", err);
       dispatch(showToast({ message: err || "Login failed!", type: "error" }));
     }
   };
@@ -117,6 +117,7 @@ const Login = () => {
           error={formErrors?.password}
           placeholder='Enter your password'
         />
+        {/* <PasswordRules password={password} /> */}
 
         {/* login btn */}
         <button type='submit' className='btn btn-primary w-100 mt-3'>

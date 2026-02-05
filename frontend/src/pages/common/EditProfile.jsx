@@ -52,8 +52,11 @@ const EditProfile = () => {
   // region render
   return (
     <div className='container mt-4'>
+          <div className="d-flex align-items-center gap-3 mb-2">
       <BackButton />
       <h3>{"Edit Profile" || ""}</h3>
+          </div>
+
 
       <EmployeeForm
         initialData={user}

@@ -11,28 +11,32 @@ const formatDate = (date = "") => {
 // endregion
 
 // region component
-const ProfileDetails = ({ 
-  user = {}, 
-  showMeta = false,
- }) => {
-  if (!user?._id) return <div className="p-4">No data found.</div>;
+const ProfileDetails = ({
+  user = {},        // user object with profile details
+  showMeta = false, // flag to show meta info like IDs and timestamps
+}) => {
+  if (!user?._id) {
+    return (
+      <div className="p-4 text-center text-muted">
+        No data found.
+      </div>
+    );
+  }
 
   return (
     <div className="card shadow-sm">
       <div className="card-body">
-        {/* name */}
+
+        {/* Basic Info Section */}
+        <h5 className="card-title mb-3">Profile Details</h5>
         <div className="row mb-2">
           <div className="col-sm-3 fw-bold">Name</div>
           <div className="col-sm-9">{user?.Name || "-"}</div>
         </div>
-
-        {/* email */}
         <div className="row mb-2">
           <div className="col-sm-3 fw-bold">Email</div>
           <div className="col-sm-9">{user?.Email || "-"}</div>
         </div>
-
-        {/* phone */}
         <div className="row mb-2">
           <div className="col-sm-3 fw-bold">Phone</div>
           <div className="col-sm-9">{user?.Phone || "-"}</div>
@@ -40,51 +44,36 @@ const ProfileDetails = ({
 
         <hr />
 
-        {/* address */}
-        <div className="row mb-2">
-          <div className="col-sm-3 fw-bold">Address Line 1</div>
-          <div className="col-sm-9">{user?.Address?.Line1 || "-"}</div>
-        </div>
-        <div className="row mb-2">
-          <div className="col-sm-3 fw-bold">Address Line 2</div>
-          <div className="col-sm-9">{user?.Address?.Line2 || "-"}</div>
-        </div>
-        <div className="row mb-2">
-          <div className="col-sm-3 fw-bold">City</div>
-          <div className="col-sm-9">{user?.Address?.City || "-"}</div>
-        </div>
-        <div className="row mb-2">
-          <div className="col-sm-3 fw-bold">State</div>
-          <div className="col-sm-9">{user?.Address?.State || "-"}</div>
-        </div>
-        <div className="row mb-2">
-          <div className="col-sm-3 fw-bold">ZIP Code</div>
-          <div className="col-sm-9">{user?.Address?.ZipCode || "-"}</div>
-        </div>
+        {/* Address Section */}
+        <h6 className="text-secondary mb-2">Address</h6>
+        {["Line1", "Line2", "City", "State", "ZipCode"].map((key) => (
+          <div className="row mb-2" key={key}>
+            <div className="col-sm-3 fw-bold">
+              {key.replace(/([A-Z])/g, " $1")}
+            </div>
+            <div className="col-sm-9">{user?.Address?.[key] || "-"}</div>
+          </div>
+        ))}
 
-
-
-        {/* meta */}
-        {
-          showMeta && (
-<>
-        <hr />
-    <div className="row mb-2">
-          <div className="col-sm-3 fw-bold">User ID</div>
-          <div className="col-sm-9">{user?._id}</div>
-        </div>
-        <div className="row mb-2">
-          <div className="col-sm-3 fw-bold">Created</div>
-          <div className="col-sm-9">{formatDate(user?.Created_At)}</div>
-        </div>
-        <div className="row mb-2">
-          <div className="col-sm-3 fw-bold">Updated</div>
-          <div className="col-sm-9">{formatDate(user?.Updated_At)}</div>
-        </div>  
-</>
-          )
-        }
-    
+        {/* Meta Info Section */}
+        {showMeta && (
+          <>
+            <hr />
+            <h6 className="text-secondary mb-2">Meta Information</h6>
+            <div className="row mb-2">
+              <div className="col-sm-3 fw-bold">User ID</div>
+              <div className="col-sm-9">{user?._id}</div>
+            </div>
+            <div className="row mb-2">
+              <div className="col-sm-3 fw-bold">Created</div>
+              <div className="col-sm-9">{formatDate(user?.Created_At)}</div>
+            </div>
+            <div className="row mb-2">
+              <div className="col-sm-3 fw-bold">Updated</div>
+              <div className="col-sm-9">{formatDate(user?.Updated_At)}</div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

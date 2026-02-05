@@ -70,9 +70,12 @@ const EditEmployee = () => {
 
   return (
     <div className='container mt-4'>
-      {/* back button */}
+          <div className="d-flex align-items-center gap-3 mb-2">
       <BackButton />
       <h3>Edit Employee</h3>
+      </div>
+      {/* back button */}
+
       {/* form to edit employee */}
       <EmployeeForm initialData={currentEmployee} onSubmit={handleUpdate} />
     </div>

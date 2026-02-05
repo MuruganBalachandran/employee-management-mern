@@ -3,6 +3,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../features/";
+import { FaUsers } from "react-icons/fa"; // Employee Management logo icon
 // endregion
 
 const Header = () => {
@@ -14,8 +15,7 @@ const Header = () => {
 
   // region handleLogout
   const handleLogout = () => {
-    if (!window.confirm("Are you sure you want to logout?")) {
-      return;}
+    if (!window.confirm("Are you sure you want to logout?")) return;
     dispatch(logout());
     navigate("/login");
   };
@@ -25,34 +25,50 @@ const Header = () => {
   const isSuperAdmin = user?.Role === "SUPER_ADMIN";
 
   return (
+    // region navbar
     <header className="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
       <div className="container">
-        <Link className="navbar-brand" to="/">
+        {/* Logo with icon */}
+        <Link className="navbar-brand fw-bold d-flex align-items-center" to="/">
+        {/* Icon logo */}
+          <FaUsers size={24} className="me-2" /> 
           Employee Management
         </Link>
 
-        <div className="collapse navbar-collapse justify-content-end">
-          <ul className="navbar-nav d-flex align-items-center gap-2">
-            
-            {/* Add Employee — Admin only */}
+        {/* Hamburger menu for mobile */}
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          {/* Default Bootstrap icon */}
+          <span className="navbar-toggler-icon"></span> 
+        </button>
+
+        {/* Collapsible navbar content */}
+        <div className="collapse navbar-collapse justify-content-end" id="navbarNav">
+          <ul className="navbar-nav align-items-center gap-2">
+            {/* Admin links */}
             {isAdmin && (
               <>
                 <li className="nav-item">
-                <Link to="/employees" className="nav-link text-light">
-                  Employees
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link to="/employees/create" className="nav-link text-light">
-                  Add Employee
-                </Link>
-              </li>
+                  <Link to="/employees" className="nav-link text-light">
+                    Employees
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link to="/employees/create" className="nav-link text-light">
+                    Add Employee
+                  </Link>
+                </li>
               </>
-            
             )}
 
-        
-            {/* Create Admin — Super Admin only */}
+            {/* Super Admin link */}
             {isSuperAdmin && (
               <li className="nav-item">
                 <Link to="/create-admin" className="nav-link text-light">
@@ -61,20 +77,20 @@ const Header = () => {
               </li>
             )}
 
-            {/* Profile — Admin only */}
-              <li className="nav-item">
-                <Link to="/me" className="nav-link text-light">
-                  My Profile
-                </Link>
-              </li>
-    
+            {/* Profile link */}
+            <li className="nav-item">
+              <Link to="/me" className="nav-link text-light">
+                My Profile
+              </Link>
+            </li>
 
-            {/* Logout */}
+            {/* Logout button */}
             {user && (
               <li className="nav-item">
                 <button
                   className="btn btn-outline-light btn-sm"
                   onClick={handleLogout}
+                  title="Logout"
                 >
                   Logout
                 </button>
@@ -84,6 +100,7 @@ const Header = () => {
         </div>
       </div>
     </header>
+    // endregion
   );
 };
 

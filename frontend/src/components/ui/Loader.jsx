@@ -8,24 +8,31 @@ const Loader = ({
   text = "",
   fullScreen = false,
 } = {}) => {
-  // region derived values
-  /* Decide spinner size class */
+  // Determine spinner size
   const spinnerSize =
     size === "small"
       ? "spinner-border-sm"
       : size === "large"
       ? "spinner-border-lg"
       : "";
-  // endregion
+
+  // Fullscreen styles
+  const fullScreenStyles = fullScreen
+    ? {
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100vh",
+        backgroundColor: "rgba(255,255,255,0.7)",
+        zIndex: 1050,
+      }
+    : {};
 
   return (
     <div
-      className={`d-flex flex-column justify-content-center align-items-center ${
-        fullScreen
-          ? "position-fixed top-0 start-0 vw-100 vh-100 bg-light bg-opacity-50"
-          : ""
-      }`}
-      style={fullScreen ? { zIndex: 1050 } : {}}
+      className={`d-flex flex-column justify-content-center align-items-center`}
+      style={fullScreenStyles}
     >
       {/* Spinner */}
       <div className={`spinner-border text-primary ${spinnerSize}`} role="status">
@@ -33,7 +40,11 @@ const Loader = ({
       </div>
 
       {/* Optional loading text */}
-      {text && <p className="mt-2">{text}</p>}
+      {text && (
+        <p className="mt-3 text-muted fw-medium small text-center">
+          {text}
+        </p>
+      )}
     </div>
   );
 };

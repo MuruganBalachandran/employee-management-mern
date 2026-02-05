@@ -36,20 +36,26 @@ const EmployeeView = () => {
   if (currentEmployeeLoading || !employee)
     return <Loader fullScreen text='Loading employee...' />;
 
-  return (
-    <div className='container mt-4'>
-  <div className="d-flex align-items-center gap-3 mb-3">
-  <BackButton />
-  <h4 className="mb-0">Employee Details</h4>
-  <div style={{ width: "90px" }} /> 
-</div>
+return (
+  <div className="container mt-4">
+    {/* Header with back button and title */}
+    <div className="d-flex align-items-center justify-content-between mb-4 flex-wrap">
+      <div className="d-flex align-items-center gap-3">
+        <BackButton />
+        <h4 className="mb-0">Employee Details</h4>
+      </div>
+    </div>
+
+    {/* Employee details card */}
       <ProfileDetails
         user={employee}
-        title='Employee Details'
+        title="Employee Details"
         showMeta={true}
       />
-    </div>
-  );
+  
+  </div>
+);
+
 };
 // endregion
 

@@ -9,7 +9,7 @@ const MainLayout = () => {
   return (
     <div className="d-flex flex-column min-vh-100">
       <Header />
-      <main className="flex-grow-1 container py-4">
+      <main className="flex-grow-1 container py-1">
         {/* placeholder for child routes in React Router. */}
         <Outlet />
       </main>

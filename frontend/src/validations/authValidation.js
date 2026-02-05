@@ -31,14 +31,14 @@ export const emailValidation = (email = "", type = "login") => {
 
   if (!regex.test(trimmed)) {
     if (type === "admin") {
-      return "Invalid email format (e.g., admin@spanadmin.com)";
+      return "Invalid email (e.g., admin@spanadmin.com)";
     }
 
     if (type === "employee") {
-      return "Invalid email format (e.g., employee@spanemployee.com)";
+      return "Invalid email (e.g., employee@spanemployee.com)";
     }
 
-    return "Invalid email format (e.g., employee@spanemployee.com)";
+    return "Invalid email (e.g., xx@span[role].com)";
   }
 
   const domain = trimmed.split("@")[1] || "";
