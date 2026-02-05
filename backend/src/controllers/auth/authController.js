@@ -6,110 +6,15 @@ import {
   sendResponse,
   STATUS_CODE,
   RESPONSE_STATUS,
-  ROLE,
 } from "../../utils/index.js";
 
 // validation imports
 import {
-  validateSignup,
   validateLogin,
-  validateEmailDomain,
 } from "../../validations/index.js";
 
 // query imports
-import { createUser, findUserByEmail } from "../../queries/index.js";
-// endregion
-
-// region signup controller
-const signup = async (req = {}, res = {}) => {
-  try {
-    // validate input against rules
-    const validation = validateSignup(req?.body || {});
-    if (!validation?.isValid) {
-      return sendResponse(
-        res,
-        validation?.statusCode || STATUS_CODE?.BAD_REQUEST,
-        RESPONSE_STATUS?.FAILURE || "FAILURE",
-        validation?.error || "Invalid input",
-      );
-    }
-
-    // extract fields with camelCase from req.body with defaults
-    const { name = "", email = "", password = "", age = 0 } = req.body || {};
-
-    const role = "ADMIN";
-
-    const department = "Administration";
-    const phone = "000-000-0000";
-    const address = {
-      Line1: "Admin HQ",
-      City: "Admin City",
-      State: "AD",
-      ZipCode: "00000",
-    };
-
-    // Domain Validation based on Role
-    const domainError = validateEmailDomain({ email, role });
-    if (domainError) {
-      return sendResponse(
-        res,
-        STATUS_CODE?.BAD_REQUEST,
-        RESPONSE_STATUS?.FAILURE,
-        domainError,
-      );
-    }
-
-    // check if email already exists
-    const existingUser = await findUserByEmail(email);
-    if (existingUser) {
-      return sendResponse(
-        res,
-        STATUS_CODE?.BAD_REQUEST || 400,
-        RESPONSE_STATUS?.FAILURE || "FAILURE",
-        "Email already registered",
-      );
-    }
-
-    // create user in DB (Model hook will handle hashing automatically)
-    const user = await createUser({
-      Name: name,
-      Email: email,
-      Password: password,
-      Age: age,
-      Role: role,
-      Department: department,
-      Phone: phone,
-      Address: address,
-    });
-
-    // generate JWT token for immediate login
-    const token = generateToken(user?._id.toString());
-
-    // send success response
-    const successMessage =
-      role === ROLE.EMPLOYEE
-        ? "User registered successfully"
-        : "Admin created successfully";
-    return sendResponse(
-      res,
-      STATUS_CODE?.CREATED || 200,
-      RESPONSE_STATUS?.SUCCESS || "SUCCESS",
-      successMessage,
-      {
-        user,
-        token,
-      },
-    );
-  } catch (err) {
-    console.error("Error in signup:", err);
-    return sendResponse(
-      res,
-      STATUS_CODE?.INTERNAL_SERVER_ERROR || 500,
-      RESPONSE_STATUS?.FAILURE || "FAILURE",
-      "Error processing request",
-    );
-  }
-};
+import { findUserByEmail } from "../../queries/index.js";
 // endregion
 
 // region login controller
@@ -186,17 +91,11 @@ const logout = async (req = {}, res = {}) => {
       "Logged out successfully",
     );
   } catch (err) {
-    console.error("Error in logout:", err);
-    return sendResponse(
-      res,
-      STATUS_CODE?.INTERNAL_SERVER_ERROR || 500,
-      RESPONSE_STATUS?.FAILURE || "FAILURE",
-      "Error processing request",
-    );
+    next(err);
   }
 };
 // endregion
 
 // region exports
-export { signup, login, logout };
+export { login, logout };
 // endregion

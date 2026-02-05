@@ -26,31 +26,10 @@ const UserSchema = new mongoose.Schema(
       type: String,
     },
 
-    Age: {
-      type: Number,
-      default: 0,
-    },
-
     Role: {
       type: String,
       enum: ["SUPER_ADMIN", "ADMIN", "EMPLOYEE"],
       default: "EMPLOYEE",
-    },
-
-    Department: {
-      type: String,
-    },
-
-    Phone: {
-      type: String,
-    },
-
-    Address: {
-      Line1: { type: String },
-      Line2: { type: String },
-      City: { type: String },
-      State: { type: String },
-      ZipCode: { type: String },
     },
 
     Is_Deleted: {
@@ -92,9 +71,7 @@ UserSchema?.index({ Name: 1 }); // Optimize user searching
 
 // region middleware
 
-/**
- * Pre-save hook to hash password and update the Updated_At timestamp.
- */
+// Pre-save hook to hash password and update the Updated_At timestamp
 UserSchema?.pre("save", async function () {
   if (this?.isModified("Password")) {
     // Standardize: Only hash if it's not already hashed (prevents double-hashing)
@@ -105,9 +82,7 @@ UserSchema?.pre("save", async function () {
   this.Updated_At = getFormattedDateTime();
 });
 
-/**
- * Pre-update hook to hash password (if provided) and update the Updated_At timestamp.
- */
+// Pre-update hook to hash password (if provided) and update the Updated_At timestamp
 UserSchema?.pre("findOneAndUpdate", async function () {
   const update = this?.getUpdate();
   if (!update) return;
@@ -127,9 +102,7 @@ UserSchema?.pre("findOneAndUpdate", async function () {
 // endregion
 
 // region methods
-/**
- * Instance method to compare a plain password with the stored hash.
- */
+// Instance method to compare a plain password with the stored hash
 UserSchema.methods.comparePassword = async function (password = "") {
   return verifyPassword(password, this.Password) || false;
 };

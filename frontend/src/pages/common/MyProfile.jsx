@@ -1,14 +1,31 @@
 // region imports
-import React from "react";
-import { useSelector } from "react-redux";
+import React, { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
-import { selectUser } from "../../features";
+import { selectUser, fetchCurrentUser } from "../../features";
 import { ProfileDetails } from "../../components";
 // endregion
 
 // region component
 const MyProfile = () => {
+  const dispatch = useDispatch();
   const user = useSelector(selectUser);
+  const loading = useSelector((state) => state?.auth?.loading);
+
+  // Fetch complete profile data on mount
+  useEffect(() => {
+    dispatch(fetchCurrentUser());
+  }, [dispatch]);
+
+  if (loading) {
+    return (
+      <div className="container mt-4 text-center">
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mt-4">

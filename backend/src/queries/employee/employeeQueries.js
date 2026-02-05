@@ -6,7 +6,7 @@ import { getFormattedDateTime, ROLE } from "../../utils/index.js";
 // endregion
 
 // region create employee
-const createEmployee = async (userData = {}) => {
+const createEmployee = async (userData = {}, adminId = null) => {
   try {
     const {
       Name = "",
@@ -16,36 +16,32 @@ const createEmployee = async (userData = {}) => {
       Department = "",
       Phone = "",
       Address = {},
-      User_Id = null,
+      Salary = 0,
+      Reporting_Manager = null,
+      Joining_date = null,
     } = userData || {};
 
-    // Create User document (if not already created)
-    let userId = User_Id;
-    if (!userId) {
-      const user = new User({
+    // Create User document
+    const user = new User({
         Name: Name.trim() || "",
         Email: Email.trim().toLowerCase() || "",
         Password: Password,
-        Age: Age || 0,
         Role: ROLE.EMPLOYEE,
-        Department: Department.trim() || "",
-        Phone: Phone.trim() || "",
-        Address: Address || {},
-      });
-      await user.save();
-      userId = user._id;
-    }
-
+    });
+    await user.save();
+    
     // Create Employee document
     const employee = new Employee({
-      User_Id: userId,
-      Name: Name.trim() || "",
-      Email: Email.trim().toLowerCase() || "",
-      Password: Password,
+      User_Id: user._id,
+      Admin_Id: adminId, // Record who created this employee
       Age: Age || 0,
       Department: Department.trim() || "",
       Phone: Phone.trim() || "",
       Address: Address || {},
+      Salary: Salary || 0,
+      Reporting_Manager: Reporting_Manager, 
+      Joining_date: Joining_date || new Date(),
+      Is_Active: 1
     });
 
     await employee.save();
@@ -78,21 +74,27 @@ const getAllEmployees = async (
       matchStage.Department = department;
     }
 
-    // Use $facet to get both employees and total count in single query
     const result = await Employee.aggregate([
       { $match: matchStage },
-      // Join with users to check Role
       {
         $lookup: {
-          from: "users", // collection name
+          from: "users", 
           localField: "User_Id",
           foreignField: "_id",
           as: "user",
         },
       },
       { $unwind: "$user" },
-      // Filter strictly for EMPLOYEE role
       { $match: { "user.Role": ROLE.EMPLOYEE } },
+      {
+          $lookup: {
+              from: "employees",
+              localField: "Reporting_Manager",
+              foreignField: "_id",
+              as: "manager"
+          }
+      },
+      { $unwind: { path: "$manager", preserveNullAndEmptyArrays: true } }, 
       {
         $facet: {
           employees: [
@@ -101,16 +103,24 @@ const getAllEmployees = async (
             { $limit: limit },
             {
               $project: {
-                _id: 1,
+                _id: 1, 
+                Employee_Id: "$_id", // Alias
                 User_Id: 1,
-                Name: 1,
-                Email: 1,
+                Admin_Id: 1,
+                Name: "$user.Name", // From User
+                Email: "$user.Email", // From User
+                Employee_Code: 1,
                 Age: 1,
                 Department: 1,
                 Phone: 1,
                 Address: 1,
+                Salary: 1,
+                Joining_date: 1,
+                Is_Active: 1,
+                Reporting_Manager: 1,
                 Created_At: 1,
                 Updated_At: 1,
+                ManagerName: "$manager.Name"
               },
             },
           ],
@@ -136,21 +146,46 @@ const getEmployeeById = async (id = "") => {
     const employees = await Employee.aggregate([
       {
         $match: {
-          _id: new mongoose.Types.ObjectId(id),
+            _id: new mongoose.Types.ObjectId(id),
           Is_Deleted: 0,
         },
       },
       {
+          $lookup: {
+              from: "employees",
+              localField: "Reporting_Manager",
+              foreignField: "_id",
+              as: "manager"
+          }
+      },
+      { $unwind: { path: "$manager", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "users", 
+          localField: "User_Id",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: "$user" },
+      {
         $project: {
           _id: 1,
+          Employee_Id: "$_id", // Alias
           User_Id: 1,
-          Name: 1,
-          Email: 1,
-          Password: 1,
+          Admin_Id: 1,
+          Name: "$user.Name", // From User
+          Email: "$user.Email", // From User
+          Employee_Code: 1,
           Age: 1,
           Department: 1,
           Phone: 1,
           Address: 1,
+          Salary: 1,
+          Joining_date: 1,
+          Is_Active: 1,
+          Reporting_Manager: 1,
+          ManagerName: "$manager.Name",
           Is_Deleted: 1,
           Created_At: 1,
           Updated_At: 1,
@@ -167,32 +202,54 @@ const getEmployeeById = async (id = "") => {
 // endregion
 
 // region update employee
-const updateEmployee = async (employee = {}, updateData = {}) => {
+// region update employee
+const updateEmployee = async (filter = {}, updateData = {}) => {
   try {
-    let doc = employee;
-    if (typeof employee.save !== "function") {
-      doc = await Employee.findById(employee._id);
-    }
+    const { Name, ...employeeData } = updateData;
+    
+    // Admin can only update basic profile fields, NOT sensitive fields
+    const employeeAllowedFields = [
+        "Age", "Department", "Phone", "Address", "Personal_Email"
+    ];
 
+    const employeeUpdateSet = {
+        Updated_At: getFormattedDateTime()
+    };
+    
+    let hasEmployeeUpdates = false;
+
+    Object.keys(employeeData).forEach(key => {
+        if (employeeAllowedFields.includes(key)) {
+             employeeUpdateSet[key] = employeeData[key];
+             hasEmployeeUpdates = true;
+        }
+         if (key === 'Address' && typeof employeeData[key] === 'object') {
+             employeeUpdateSet.Address = employeeData[key];
+             hasEmployeeUpdates = true;
+         }
+    });
+
+    const query = { ...filter, Is_Deleted: 0 };
+    let doc = await Employee.findOne(query);
+    
     if (!doc) return null;
 
-    const allowedFields = ["Name", "Age", "Department", "Phone", "Address"];
-    let isChanged = false;
-
-    for (const field of allowedFields) {
-      if (updateData[field] !== undefined && updateData[field] !== doc[field]) {
-        doc[field] =
-          field === "Name" ? updateData[field].trim() : updateData[field];
-        isChanged = true;
-      }
+    if (hasEmployeeUpdates) {
+        doc = await Employee.findOneAndUpdate(
+            query,
+            { $set: employeeUpdateSet },
+            { new: true } 
+        );
+    }
+    
+    // Update User Name if provided
+    if (Name && doc.User_Id) {
+         await User.findByIdAndUpdate(doc.User_Id, {
+            Name: Name.trim(),
+            Updated_At: getFormattedDateTime()
+        });
     }
 
-    if (!isChanged) {
-      return null;
-    }
-
-    doc.Updated_At = getFormattedDateTime();
-    await doc.save();
     return doc;
   } catch (err) {
     console.error("Error updating employee:", err);
@@ -202,25 +259,30 @@ const updateEmployee = async (employee = {}, updateData = {}) => {
 // endregion
 
 // region delete employee
-const deleteEmployee = async (employee = {}) => {
+const deleteEmployee = async (employeeId = "") => {
   try {
-    if (!employee) {
-      return null;
+    if (!employeeId) return null;
+
+    const updateSet = {
+        Is_Deleted: 1,
+        Updated_At: getFormattedDateTime()
     }
 
-    let doc = employee;
-    if (typeof employee.save !== "function") {
-      doc = await Employee.findById(employee._id);
+    const doc = await Employee.findOneAndUpdate(
+        { _id: employeeId },
+        { $set: updateSet },
+        { new: true }
+    );
+    
+    if (!doc) return null;
+
+    if (doc.User_Id) {
+        await User.findByIdAndUpdate(doc.User_Id, {
+            Is_Deleted: 1,
+            Updated_At: getFormattedDateTime()
+        });
     }
 
-    if (!doc) {
-      return null;
-    }
-
-    doc.Is_Deleted = 1;
-    doc.Updated_At = getFormattedDateTime() || new Date().toISOString();
-
-    await doc.save();
     return doc;
   } catch (err) {
     console.error("Error deleting employee:", err);

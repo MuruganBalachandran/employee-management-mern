@@ -2,10 +2,6 @@
 import {
   validateName,
   validatePassword,
-  validateAge,
-  validateDepartment,
-  validatePhone,
-  validateAddress,
 } from "../helpers/typeValidations.js";
 
 import { validationError } from "../helpers/validationError.js";
@@ -36,41 +32,7 @@ const validateUpdateProfile = (data = {}) => {
   }
   // endregion
 
-  // region age
-  if (age !== undefined) {
-    const ageError = validateAge(age);
-    if (ageError) {
-      errors.push(ageError);
-    }
-  }
-  // endregion
 
-  // region department
-  if (department !== undefined) {
-    const deptError = validateDepartment(department);
-    if (deptError) {
-      errors.push(deptError);
-    }
-  }
-  // endregion
-
-  // region phone
-  if (phone !== undefined) {
-    const phoneError = validatePhone(phone);
-    if (phoneError) {
-      errors.push(phoneError);
-    }
-  }
-  // endregion
-
-  // region address
-  if (address !== undefined) {
-    const addressError = validateAddress(address);
-    if (addressError) {
-      errors.push(addressError);
-    }
-  }
-  // endregion
 
   // region result
   if (errors?.length > 0) {

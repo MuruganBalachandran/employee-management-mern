@@ -9,7 +9,6 @@ import {
 import {
   validateCreateEmployee,
   validateUpdateEmployee,
-  validateEmailDomain,
 } from "../../validations/index.js";
 
 import {
@@ -18,7 +17,6 @@ import {
   getEmployeeById,
   updateEmployee,
   deleteEmployee,
-  findUserByEmail,
 } from "../../queries/index.js";
 
 import { validateObjectId } from "../../validations/helpers/typeValidations.js";
@@ -137,32 +135,19 @@ const createNewEmployee = async (req = {}, res = {}) => {
       name = "",
       email = "",
       password = "",
+      employeeCode = "",
       age = 0,
       department = "",
       phone = "",
       address = {},
+      salary = 0,
+      reportingManager = null,
+      joiningDate = null,
     } = req?.body || {};
 
-    // Domain Check
-    const domainError = validateEmailDomain(email, ROLE.EMPLOYEE);
-    if (domainError) {
-      return sendResponse(
-        res,
-        STATUS_CODE?.BAD_REQUEST || 400,
-        RESPONSE_STATUS?.FAILURE || "FAILURE",
-        domainError,
-      );
-    }
 
-    const existingUser = await findUserByEmail(email);
-    if (existingUser) {
-      return sendResponse(
-        res,
-        STATUS_CODE?.BAD_REQUEST || 400,
-        RESPONSE_STATUS?.FAILURE || "FAILURE",
-        "Email already registered",
-      );
-    }
+
+
 
     // Map address from camelCase (API) to PascalCase (DB)
     const mappedAddress =
@@ -175,16 +160,22 @@ const createNewEmployee = async (req = {}, res = {}) => {
             ZipCode: address?.zipCode || "",
           }
         : {};
+        
+    const adminId = req?.user?.Role === ROLE.ADMIN ? req.user._id : null; 
 
     const employee = await createEmployee({
       Name: name,
       Email: email,
       Password: password,
+      Employee_Code: employeeCode,
       Age: age,
       Department: department,
       Phone: phone,
       Address: mappedAddress,
-    });
+      Salary: salary,
+      Reporting_Manager: reportingManager,
+      Joining_date: joiningDate,
+    }, adminId);
 
     return sendResponse(
       res,
@@ -195,17 +186,33 @@ const createNewEmployee = async (req = {}, res = {}) => {
     );
   } catch (err) {
     console.error("Error creating employee:", err);
+    console.error("Error details:", {
+      code: err.code,
+      message: err.message,
+      name: err.name,
+      stack: err.stack
+    });
+    
+    if (err.code === 11000) {
+         return sendResponse(
+            res,
+            STATUS_CODE?.BAD_REQUEST || 400,
+            RESPONSE_STATUS?.FAILURE || "FAILURE",
+            "Email already registered",
+        );
+    }
+
     return sendResponse(
       res,
       STATUS_CODE?.INTERNAL_SERVER_ERROR || 500,
       RESPONSE_STATUS?.FAILURE || "FAILURE",
-      "Error creating employee",
+      err.message || "Error creating employee",
     );
   }
 };
 // endregion
 
-// region update employee (admin)
+// region update employee
 const updateEmployeeDetails = async (req = {}, res = {}) => {
   try {
     const { id = "" } = req?.params || {};
@@ -219,17 +226,9 @@ const updateEmployeeDetails = async (req = {}, res = {}) => {
         idError,
       );
     }
-
-    const employee = await getEmployeeById(id);
-
-    if (!employee) {
-      return sendResponse(
-        res,
-        STATUS_CODE?.NOT_FOUND || 404,
-        RESPONSE_STATUS.FAILURE || "FAILURE",
-        "Employee not found",
-      );
-    }
+    
+    // NOTE: Removed previous pre-fetch of getEmployeeById(id) to save 1 DB hit.
+    // We proceed directly to update. If not found, updateEmployee returns null.
 
     const validation = validateUpdateEmployee(req?.body || {});
     if (!validation?.isValid) {
@@ -242,20 +241,17 @@ const updateEmployeeDetails = async (req = {}, res = {}) => {
     }
 
     // Extract fields
-    const { name, age, department, phone, address } = req?.body || {};
+    const { 
+        name, age, department, phone, address, personalEmail 
+    } = req?.body || {};
+    
     const updateData = {};
-    if (name !== undefined) {
-      updateData.Name = name;
-    }
-    if (age !== undefined) {
-      updateData.Age = age;
-    }
-    if (department !== undefined) {
-      updateData.Department = department;
-    }
-    if (phone !== undefined) {
-      updateData.Phone = phone;
-    }
+    if (name !== undefined) updateData.Name = name;
+    if (age !== undefined) updateData.Age = age;
+    if (department !== undefined) updateData.Department = department;
+    if (phone !== undefined) updateData.Phone = phone;
+    if (personalEmail !== undefined) updateData.Personal_Email = personalEmail;
+    
     if (address !== undefined && typeof address === "object") {
       updateData.Address = {
         Line1: address.line1 || "",
@@ -265,15 +261,25 @@ const updateEmployeeDetails = async (req = {}, res = {}) => {
         ZipCode: address.zipCode || "",
       };
     }
+    
+    // Admin update logic (isSelfUpdate = false by default in query)
+    const updated = await updateEmployee({ _id: id }, updateData);
 
-    const updated = await updateEmployee(employee, updateData);
+    if (!updated) {
+       return sendResponse(
+        res,
+        STATUS_CODE?.NOT_FOUND || 404,
+        RESPONSE_STATUS?.FAILURE || "FAILURE",
+        "Employee not found or no changes made",
+      );     
+    }
 
     return sendResponse(
       res,
       STATUS_CODE?.OK || 200,
       RESPONSE_STATUS?.SUCCESS || "SUCCESS",
       "Employee updated successfully",
-      updated || employee,
+      updated,
     );
   } catch (err) {
     console.error("Error updating employee:", err);
@@ -301,19 +307,19 @@ const removeEmployee = async (req = {}, res = {}) => {
         idError,
       );
     }
+    
+    // Removed pre-fetch to save DB hit.
 
-    const employee = await getEmployeeById(id);
-
-    if (!employee) {
-      return sendResponse(
+    const result = await deleteEmployee(id);
+    
+    if (!result) {
+        return sendResponse(
         res,
         STATUS_CODE?.NOT_FOUND || 404,
         RESPONSE_STATUS?.FAILURE || "FAILURE",
         "Employee not found",
       );
     }
-
-    await deleteEmployee(employee);
 
     return sendResponse(
       res,

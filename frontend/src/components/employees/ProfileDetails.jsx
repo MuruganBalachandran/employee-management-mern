@@ -38,8 +38,43 @@ const ProfileDetails = ({
           <div className="col-sm-9">{user?.Email || "-"}</div>
         </div>
         <div className="row mb-2">
+          <div className="col-sm-3 fw-bold">Employee Code</div>
+          <div className="col-sm-9">{user?.Employee_Code || "-"}</div>
+        </div>
+        <div className="row mb-2">
+          <div className="col-sm-3 fw-bold">Age</div>
+          <div className="col-sm-9">{user?.Age || "-"}</div>
+        </div>
+        <div className="row mb-2">
+          <div className="col-sm-3 fw-bold">Department</div>
+          <div className="col-sm-9">{user?.Department || "-"}</div>
+        </div>
+        <div className="row mb-2">
           <div className="col-sm-3 fw-bold">Phone</div>
           <div className="col-sm-9">{user?.Phone || "-"}</div>
+        </div>
+
+        <hr />
+
+        {/* Employment Details Section */}
+        <h6 className="text-secondary mb-2">Employment Details</h6>
+        <div className="row mb-2">
+          <div className="col-sm-3 fw-bold">Salary</div>
+          <div className="col-sm-9">
+            {user?.Salary ? `₹${user.Salary.toLocaleString()}` : "-"}
+          </div>
+        </div>
+        <div className="row mb-2">
+          <div className="col-sm-3 fw-bold">Reporting Manager</div>
+          <div className="col-sm-9">{user?.Reporting_Manager || "-"}</div>
+        </div>
+        <div className="row mb-2">
+          <div className="col-sm-3 fw-bold">Joining Date</div>
+          <div className="col-sm-9">
+            {user?.Joining_date 
+              ? new Date(user.Joining_date).toLocaleDateString() 
+              : "-"}
+          </div>
         </div>
 
         <hr />

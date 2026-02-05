@@ -7,10 +7,12 @@ import {
   validateDepartment,
   validatePhone,
   validateAddress,
+  validateEmailDomain,
+  validateObjectId,
 } from "../helpers/typeValidations.js";
 
 import { validationError } from "../helpers/validationError.js";
-import { VALIDATION_MESSAGES } from "../../utils/index.js";
+import { VALIDATION_MESSAGES, ROLE } from "../../utils/index.js";
 // endregion
 
 // region validate create employee
@@ -38,6 +40,10 @@ const validateCreateEmployee = (data = {}) => {
   const emailError = validateEmail(email);
   if (emailError) {
     errors.email = emailError;
+  } else {
+    // Check domain specific to employees
+    const domainError = validateEmailDomain({ email, role: ROLE.EMPLOYEE });
+    if (domainError) errors.email = domainError;
   }
 
   // Password
@@ -74,6 +80,13 @@ const validateCreateEmployee = (data = {}) => {
   if (addressError) {
     errors.address = addressError;
   }
+
+  const { salary, joiningDate, reportingManager, isActive } = data;
+
+  if (salary !== undefined && (typeof salary !== 'number' || salary < 0)) errors.salary = "Salary must be a non-negative number";
+  if (joiningDate !== undefined && isNaN(Date.parse(joiningDate))) errors.joiningDate = "Invalid joining date";
+  // reportingManager is optional, no validation needed (just a string ID)
+  if (isActive !== undefined && ![0, 1].includes(isActive)) errors.isActive = "Is Active must be 0 or 1";
 
   if (Object.keys(errors).length > 0) {
     return validationError(errors);
@@ -123,6 +136,7 @@ const validateUpdateEmployee = (data = {}) => {
       errors.address = addressError;
     }
   }
+
 
   if (Object.keys(errors).length > 0) {
     return validationError(errors);

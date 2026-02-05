@@ -33,10 +33,11 @@ const ProtectedRoute = () => {
 };
 // endregion
 
-// region Admin Route
+// Admin Route (includes Super Admin)
 const AdminRoute = () => {
   const isAdmin = useSelector(selectIsAdmin) || false;
-  return isAdmin ? <Outlet /> : <Navigate to='/me' replace />;
+  const isSuperAdmin = useSelector(selectIsSuperAdmin) || false;
+  return (isAdmin || isSuperAdmin) ? <Outlet /> : <Navigate to='/me' replace />;
 };
 // endregion
 

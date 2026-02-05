@@ -1,5 +1,5 @@
 // region barrel exports
-export { createUser, findUserByEmail } from './auth/authQueries.js';
+export { findUserByEmail } from './auth/authQueries.js';
 export {
     createEmployee,
     getAllEmployees,
@@ -12,4 +12,12 @@ export {
     deleteUserAccount,
     updateUserProfile,
 } from './user/userQueries.js';
+
+export {
+    createAdmin,
+    getAllAdmins,
+    getAdminById,
+    updateAdmin,
+    deleteAdmin,
+} from './superAdmin/superAdminQueries.js';
 // endregion

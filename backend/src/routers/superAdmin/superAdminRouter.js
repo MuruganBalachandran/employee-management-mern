@@ -1,8 +1,12 @@
 // region imports
 import express from "express";
 import { auth } from "../../middleware/index.js";
-import { removeAdmin } from "../../controllers/superAdmin/superAdminController.js";
-import { signup } from "../../controllers/auth/authController.js";
+import {
+  listAdmins,
+  getAdmin,
+  createNewAdmin,
+  removeAdmin,
+} from "../../controllers/superAdmin/superAdminController.js";
 // endregion
 
 // region router initialization
@@ -12,8 +16,10 @@ const router = express.Router();
 // region super admin routes
 router.use(auth("SUPER_ADMIN"));
 
-router.post("/create-admin", signup);
-router.delete("/delete-admin/:id", removeAdmin);
+router.get("/", listAdmins);
+router.get("/:id", getAdmin);
+router.post("/", createNewAdmin);
+router.delete("/:id", removeAdmin);
 // endregion
 
 // region exports

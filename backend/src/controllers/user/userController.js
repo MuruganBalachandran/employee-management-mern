@@ -16,7 +16,45 @@ import { updateUserProfile, deleteUserAccount } from "../../queries/index.js";
 // region get profile controller
 const getProfile = async (req = {}, res = {}) => {
   try {
-    // return current authenticated user
+    const user = req?.user;
+    
+    // If user is an employee, fetch complete employee data
+    if (user?.Role === "EMPLOYEE") {
+      const Employee = (await import("../../models/employee/employeeModel.js")).default;
+      const employeeData = await Employee.findOne({ 
+        User_Id: user._id, 
+        Is_Deleted: 0 
+      }).lean();
+      
+      if (employeeData) {
+        // Merge user data (Name, Email) with employee data
+        const completeProfile = {
+          _id: employeeData._id,
+          Name: user.Name,
+          Email: user.Email,
+          Employee_Code: employeeData.Employee_Code,
+          Age: employeeData.Age,
+          Department: employeeData.Department,
+          Phone: employeeData.Phone,
+          Address: employeeData.Address,
+          Salary: employeeData.Salary,
+          Reporting_Manager: employeeData.Reporting_Manager,
+          Joining_date: employeeData.Joining_date,
+          Created_At: employeeData.Created_At,
+          Updated_At: employeeData.Updated_At,
+        };
+        
+        return sendResponse(
+          res,
+          STATUS_CODE?.OK || 200,
+          RESPONSE_STATUS?.SUCCESS || "SUCCESS",
+          "Profile fetched successfully",
+          { user: completeProfile },
+        );
+      }
+    }
+    
+    // For admins or if employee data not found, return user data only
     return sendResponse(
       res,
       STATUS_CODE?.OK || 200,
@@ -51,28 +89,14 @@ const updateProfile = async (req = {}, res = {}) => {
     }
 
     // Extract fields in camelCase from API payload with defaults
-    const { name, password, age, department, phone, address } = req.body || {};
+    const { name, password } = req.body || {};
 
-    // Map address from camelCase (API) to PascalCase (DB)
-    const mappedAddress =
-      address && typeof address === "object"
-        ? {
-            Line1: address?.line1 || address?.Line1 || "",
-            Line2: address?.line2 || address?.Line2 || "",
-            City: address?.city || address?.City || "",
-            State: address?.state || address?.State || "",
-            ZipCode: address?.zipCode || address?.ZipCode || "",
-          }
-        : address;
+
 
     // Map to PascalCase for database update
     const updatedUser = await updateUserProfile(req?.user, {
       Name: name,
       Password: password,
-      Age: age,
-      Department: department,
-      Phone: phone,
-      Address: mappedAddress,
     });
 
     if (!updatedUser) {

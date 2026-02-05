@@ -1,36 +1,36 @@
 // region imports
 import mongoose from "mongoose";
-import validator from "validator";
-import { hashPassword, verifyPassword, getFormattedDateTime } from "../../utils/common/commonFunctions.js";
+import { getFormattedDateTime } from "../../utils/common/commonFunctions.js";
 // endregion
 
 
 // region schema
 const EmployeeSchema = new mongoose.Schema(
     {
+        Employee_Id:{
+            type: mongoose.Schema.Types.ObjectId,
+            auto: true,
+        },
+        // refer to User model
         User_Id: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
             auto: true,
         },
-
-        Name: {
-            type: String,
-            
-            
+        // who created
+        Admin_Id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Admin',
+            auto: true,
         },
 
-        Email: {
+        // Employee unique code/ID
+        Employee_Code: {
             type: String,
-            
-            
-            
+            unique: true,
+            sparse: true,
         },
 
-        Password: {
-            type: String,
-            
-        },
 
         Age: {
             type: Number,
@@ -39,14 +39,31 @@ const EmployeeSchema = new mongoose.Schema(
 
         Department: {
             type: String,
-            
-            
         },
 
         Phone: {
+            type: String, 
+        },
+    
+        Personal_Email:{
+
+        },
+        Salary:{
+            type: Number,
+            default: 0,
+        },
+        Reporting_Manager:{
             type: String,
-            
-            
+        },
+
+        Joining_date:{
+            type: Date,
+            default: Date.now,
+        },
+
+        Is_Active:{
+            type: Number,
+            default: 1,
         },
 
         Address: {
@@ -82,65 +99,31 @@ const EmployeeSchema = new mongoose.Schema(
 
 
 // region minimal indexes
-// Email unique only for ACTIVE employees
-EmployeeSchema?.index(
-    { Email: 1 },
-    { unique: true, partialFilterExpression: { Is_Deleted: 0 } }
-);
-
 // employee filtering and sorting
 EmployeeSchema?.index({ User_Id: 1 });
 EmployeeSchema?.index({ Is_Deleted: 1 });
 EmployeeSchema?.index({ Created_At: -1 }); // Optimize recent employee sorting
-EmployeeSchema?.index({ Name: 1 });       // Optimize employee searching
 
 // endregion
 
 
 // region middleware
-
-/**
- * Pre-save hook to hash password and update the Updated_At timestamp.
- */
-EmployeeSchema?.pre("save", async function () {
-    if (this?.isModified("Password")) {
-        // Standardize: Only hash if it's not already hashed (prevents double-hashing)
-        if (!this.Password?.startsWith("$argon2")) {
-            this.Password = await hashPassword(this?.Password);
-        }
-    }
-    this.Updated_At = getFormattedDateTime() ;
+EmployeeSchema?.pre("save", function (next) {
+    this.Updated_At = getFormattedDateTime();
+  
 });
 
-/**
- * Pre-update hook to hash password (if provided) and update the Updated_At timestamp.
- */
-EmployeeSchema?.pre("findOneAndUpdate", async function () {
-    const update = this?.getUpdate();
-    if (!update) return;
-
-    const pwd = update?.Password || update?.$set?.Password;
-
-    if (pwd && !pwd?.startsWith("$argon2")) {
-        const hashed = await hashPassword(pwd);
-        if (update?.Password) update.Password = hashed;
-        if (update?.$set?.Password) update.$set.Password = hashed;
+EmployeeSchema?.pre("findOneAndUpdate", function (next) {
+    const update = this.getUpdate();
+    if (update) {
+         if (!update.$set) update.$set = {};
+         update.$set.Updated_At = getFormattedDateTime();
     }
-
-    if (!update?.$set) update.$set = {};
-    update.$set.Updated_At = getFormattedDateTime() ;
 });
-
+// endregion
 // endregion
 
 
-// region methods
-/**
- * Instance method to compare a plain password with the stored hash.
- */
-EmployeeSchema.methods.comparePassword = async function (password = "") {
-    return verifyPassword(password, this?.Password) ?? false;
-};
 // endregion
 
 

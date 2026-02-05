@@ -77,12 +77,14 @@ const Header = () => {
               </li>
             )}
 
-            {/* Profile link */}
-            <li className="nav-item">
-              <Link to="/me" className="nav-link text-light">
-                My Profile
-              </Link>
-            </li>
+            {/* Profile link - Only for Employees */}
+            {!isAdmin && (
+              <li className="nav-item">
+                <Link to="/me" className="nav-link text-light">
+                  My Profile
+                </Link>
+              </li>
+            )}
 
             {/* Logout button */}
             {user && (
