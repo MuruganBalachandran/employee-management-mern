@@ -242,7 +242,8 @@ const updateEmployeeDetails = async (req = {}, res = {}) => {
 
     // Extract fields
     const { 
-        name, age, department, phone, address, personalEmail 
+        name, age, department, phone, address, personalEmail,
+        salary, reportingManager, joiningDate, employeeCode
     } = req?.body || {};
     
     const updateData = {};
@@ -251,6 +252,10 @@ const updateEmployeeDetails = async (req = {}, res = {}) => {
     if (department !== undefined) updateData.Department = department;
     if (phone !== undefined) updateData.Phone = phone;
     if (personalEmail !== undefined) updateData.Personal_Email = personalEmail;
+    if (salary !== undefined) updateData.Salary = salary;
+    if (reportingManager !== undefined) updateData.Reporting_Manager = reportingManager;
+    if (joiningDate !== undefined) updateData.Joining_date = joiningDate;
+    if (employeeCode !== undefined) updateData.Employee_Code = employeeCode;
     
     if (address !== undefined && typeof address === "object") {
       updateData.Address = {

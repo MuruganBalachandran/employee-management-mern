@@ -55,24 +55,25 @@ const EmployeeForm = ({
 
   // region sync form when editing
   useEffect(() => {
+    // Sync form state with initial employee data
     if (initialData?._id) {
       setForm({
-        name: initialData?.Name || "",
-        email: initialData?.Email || "",
+        name: initialData?.Name ?? "",
+        email: initialData?.Email ?? "",
         password: "",
         confirmPassword: "",
-        employeeCode: initialData?.Employee_Code || "",
-        department: initialData?.Department || "",
-        phone: initialData?.Phone || "",
+        employeeCode: initialData?.Employee_Code ?? "",
+        department: initialData?.Department ?? "",
+        phone: initialData?.Phone ?? "",
         address: {
-          line1: initialData?.Address?.Line1 || "",
-          line2: initialData?.Address?.Line2 || "",
-          city: initialData?.Address?.City || "",
-          state: initialData?.Address?.State || "",
-          zipCode: initialData?.Address?.ZipCode || "",
+          line1: initialData?.Address?.Line1 ?? "",
+          line2: initialData?.Address?.Line2 ?? "",
+          city: initialData?.Address?.City ?? "",
+          state: initialData?.Address?.State ?? "",
+          zipCode: initialData?.Address?.ZipCode ?? "",
         },
-        salary: initialData?.Salary || "",
-        reportingManager: initialData?.Reporting_Manager || "",
+        salary: initialData?.Salary ?? "",
+        reportingManager: initialData?.Reporting_Manager ?? "",
         joiningDate: initialData?.Joining_date ? initialData.Joining_date.split('T')[0] : "",
       });
     }
@@ -212,15 +213,17 @@ const EmployeeForm = ({
         error={errors?.email || ""}
         disabled={isEdit || hideCredentials}
       />
-      {/* employee code */}
-      <Input
-        label='Employee Code'
-        placeholder='Enter unique employee code (e.g., EMP001)'
-        value={form?.employeeCode || ""}
-        onChange={(e) => handleChange("employeeCode", e?.target?.value || "")}
-        error={errors?.employeeCode || ""}
-        disabled={isEdit}
-      />
+      {/* employee code - hide for employee's own profile edit */}
+      {!hideCredentials && (
+        <Input
+          label='Employee Code'
+          placeholder='Enter unique employee code (e.g., EMP001)'
+          value={form?.employeeCode || ""}
+          onChange={(e) => handleChange("employeeCode", e?.target?.value || "")}
+          error={errors?.employeeCode || ""}
+          disabled={isEdit}
+        />
+      )}
       {/* password show only when create */}
       {!isEdit && !hideCredentials && (
         <>
@@ -321,7 +324,6 @@ const EmployeeForm = ({
             value={form?.salary || ""}
             onChange={(e) => handleChange("salary", e?.target?.value || "")}
             error={errors?.salary || ""}
-            disabled={isEdit}
           />
           
           {/* Reporting Manager */}
@@ -331,7 +333,6 @@ const EmployeeForm = ({
             value={form?.reportingManager || ""}
             onChange={(e) => handleChange("reportingManager", e?.target?.value || "")}
             error={errors?.reportingManager || ""}
-            disabled={isEdit}
           />
           
           {/* Joining Date */}
@@ -341,7 +342,6 @@ const EmployeeForm = ({
             value={form?.joiningDate || ""}
             onChange={(e) => handleChange("joiningDate", e?.target?.value || "")}
             error={errors?.joiningDate || ""}
-            disabled={isEdit}
           />
         </>
       )}

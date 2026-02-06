@@ -207,9 +207,10 @@ const updateEmployee = async (filter = {}, updateData = {}) => {
   try {
     const { Name, ...employeeData } = updateData;
     
-    // Admin can only update basic profile fields, NOT sensitive fields
+    // Admin can update these employee fields
     const employeeAllowedFields = [
-        "Age", "Department", "Phone", "Address", "Personal_Email"
+        "Age", "Department", "Phone", "Address", "Personal_Email",
+        "Salary", "Reporting_Manager", "Joining_date", "Employee_Code"
     ];
 
     const employeeUpdateSet = {

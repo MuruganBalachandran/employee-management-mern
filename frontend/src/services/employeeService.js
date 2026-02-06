@@ -36,12 +36,9 @@ export const createEmployee = (data = {}) =>
 export const updateEmployee = (id = "", data = {}) => {
   const payload = { ...data };
 
-  // Remove fields that cannot be updated by Admin
-  delete payload.email;            // Email cannot be updated
-  delete payload.password;         // Password cannot be updated
-  delete payload.salary;           // Salary cannot be updated by Admin
-  delete payload.reportingManager; // Reporting Manager cannot be updated by Admin
-  delete payload.joiningDate;      // Joining Date cannot be updated by Admin
+  // Remove fields that cannot be updated
+  delete payload.email;     // Email cannot be updated
+  delete payload.password;  // Password cannot be updated
 
   // Send PATCH request to /employees/:id
   return api.patch(`/employees/${id}`, payload);
