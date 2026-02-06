@@ -12,12 +12,11 @@ import {
   phoneValidation,
   addressValidation,
   VALID_DEPARTMENTS,
-} from "../../validations/employeeValidation";
-import {
+  employeeCodeValidation,
   salaryValidation,
   reportingManagerValidation,
-  joiningDateValidation,
-} from "../../validations/newFieldValidations";
+  joiningDateValidation
+} from "../../validations/employeeValidation";
 // endregion
 
 // region EmployeeForm component
@@ -74,7 +73,9 @@ const EmployeeForm = ({
         },
         salary: initialData?.Salary ?? "",
         reportingManager: initialData?.Reporting_Manager ?? "",
-        joiningDate: initialData?.Joining_date ? initialData.Joining_date.split('T')[0] : "",
+        joiningDate: initialData?.Joining_date
+          ? initialData.Joining_date.split("T")[0]
+          : "",
       });
     }
   }, [initialData]);
@@ -108,9 +109,7 @@ const EmployeeForm = ({
           fieldError = passwordValidation(value, isEdit);
           break;
         case "confirmPassword":
-          if (value !== form.password) {
-            fieldError = "Passwords do not match";
-          }
+          fieldError = value !== form.password ? "Passwords do not match" : "";
           break;
         case "department":
           fieldError = departmentValidation(value);
@@ -126,6 +125,9 @@ const EmployeeForm = ({
           break;
         case "joiningDate":
           fieldError = joiningDateValidation(value);
+          break;
+        case "employeeCode":
+          fieldError = employeeCodeValidation(value, isEdit);
           break;
       }
 
@@ -143,7 +145,7 @@ const EmployeeForm = ({
   };
   // endregion
 
-  // region handleSubmit
+  /// region handleSubmit
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -154,21 +156,11 @@ const EmployeeForm = ({
       employeeCode: form.employeeCode,
       department: form.department,
       phone: form.phone,
-      address: {
-        line1: form.address.line1,
-        line2: form.address.line2,
-        city: form.address.city,
-        state: form.address.state,
-        zipCode: form.address.zipCode,
-      },
+      salary: form.salary !== "" ? Number(form.salary) : "",
+      reportingManager: form.reportingManager,
+      joiningDate: form.joiningDate,
+      address: { ...form.address },
     };
-
-    // Include salary, reportingManager, joiningDate only during creation (and only if provided)
-    if (!isEdit) {
-      if (form.salary && form.salary.trim()) payload.salary = parseFloat(form.salary);
-      if (form.reportingManager && form.reportingManager.trim()) payload.reportingManager = form.reportingManager.trim();
-      if (form.joiningDate && form.joiningDate.trim()) payload.joiningDate = form.joiningDate.trim();
-    }
 
     if (isEdit) {
       delete payload.email;
@@ -176,12 +168,13 @@ const EmployeeForm = ({
       delete payload.employeeCode;
     }
 
-    let validationErrors = hideCredentials
-      ? {} // profile edit -> skip employee validation
-      : validateEmployee(
-          { ...payload, confirmPassword: form.confirmPassword },
-          isEdit,
-        );
+    //  ALL FIELDS VALIDATED TOGETHER
+    const validationErrors = {
+      ...validateEmployee(
+        { ...payload, confirmPassword: form.confirmPassword },
+        isEdit,
+      ),
+    };
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -312,7 +305,6 @@ const EmployeeForm = ({
         error={errors["address.zipCode"]}
       />
 
-
       {/* Salary, Reporting Manager, Joining Date */}
       {!hideCredentials && (
         <>
@@ -325,22 +317,24 @@ const EmployeeForm = ({
             onChange={(e) => handleChange("salary", e?.target?.value || "")}
             error={errors?.salary || ""}
           />
-          
+
           {/* Reporting Manager */}
           <Input
-            label='Reporting Manager ID (Optional)'
-            placeholder='Enter reporting manager ID'
-            value={form?.reportingManager || ""}
-            onChange={(e) => handleChange("reportingManager", e?.target?.value || "")}
-            error={errors?.reportingManager || ""}
+            label='Reporting Manager (Name + Code)'
+            placeholder='Example: Ramesh (EMP002)'
+            value={form.reportingManager}
+            onChange={(e) => handleChange("reportingManager", e.target.value)}
+            error={errors.reportingManager}
           />
-          
+
           {/* Joining Date */}
           <Input
-            label='Joining Date (Optional)'
+            label='Joining Date'
             type='date'
             value={form?.joiningDate || ""}
-            onChange={(e) => handleChange("joiningDate", e?.target?.value || "")}
+            onChange={(e) =>
+              handleChange("joiningDate", e?.target?.value || "")
+            }
             error={errors?.joiningDate || ""}
           />
         </>

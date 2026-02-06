@@ -12,6 +12,7 @@ const createEmployee = async (userData = {}, adminId = null) => {
       Name = "",
       Email = "",
       Password = "",
+        Employee_Code = "", 
       Age = 0,
       Department = "",
       Phone = "",
@@ -33,7 +34,8 @@ const createEmployee = async (userData = {}, adminId = null) => {
     // Create Employee document
     const employee = new Employee({
       User_Id: user._id,
-      Admin_Id: adminId, // Record who created this employee
+      Admin_Id: adminId, 
+      Employee_Code:Employee_Code || "",
       Age: Age || 0,
       Department: Department.trim() || "",
       Phone: Phone.trim() || "",
@@ -292,10 +294,25 @@ const deleteEmployee = async (employeeId = "") => {
 };
 // endregion
 
+// region check employee code uniqueness
+const isEmployeeCodeTaken = async (code, excludeId = null) => {
+  const query = { Employee_Code: code };
+
+  // while editing, ignore same employee
+  if (excludeId) {
+    query._id = { $ne: excludeId };
+  }
+
+  const existing = await Employee.findOne(query).lean();
+  return !!existing;
+};
+// endregion
+
 export {
   createEmployee,
   getAllEmployees,
   getEmployeeById,
   updateEmployee,
   deleteEmployee,
+  isEmployeeCodeTaken,
 };

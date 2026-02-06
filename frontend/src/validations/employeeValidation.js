@@ -7,15 +7,22 @@ export const NAME_REGEX = /^(?=.*[\p{L}\p{M}])[\p{L}\p{M}\d\s'-]+$/u;
 export const CITY_STATE_REGEX = /^[A-Za-z ]{2,50}$/;
 
 // Regex for phone numbers (supports various international formats)
-export const PHONE_REGEX =
-  /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
+export const PHONE_REGEX = /^[+]?[0-9]{10,15}$/;
+
 
 // Regex for ZIP code (5 or 6 digits)
 export const ZIP_REGEX = /^\d{5,6}$/;
 
 // Regex for general email validation
 export const EMAIL_REGEX =
-  /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
+  /^[A-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?\.)+[A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?$/i;
+
+
+  export const EMPLOYEE_CODE_REGEX = /^EMP\d{3,6}$/;
+  export const REPORTING_MANAGER_REGEX =
+  /^[\p{L}\p{M}\s'-]{3,50}\s\((EMP\d{3,6})\)$/u;
+
+
 
 // Reserved names not allowed for users
 export const RESERVED_NAMES = [
@@ -118,6 +125,7 @@ export const VALID_DEPARTMENTS = [
   "Network",
   "Cyber Security",
   "DevOps",
+  "Administration"
 ];
 
 // endregion
@@ -249,9 +257,10 @@ export const passwordValidation = (password = "") => {
   }
 
   // Repeated chars
-  if (/(.)\1{2,}/.test(passwordLower)) {
-    return "Password cannot contain repeated characters";
-  }
+if (/(.)\1{3,}/.test(passwordLower)) {
+  return "Password cannot contain excessive repeated characters";
+}
+
 
   // Sequential chars
   const sequences = [
@@ -321,7 +330,14 @@ export const addressValidation = (address = {}) => {
   }
 
   const errors = {};
-  const { line1, line2, city, state, zipCode } = address ?? {};
+const {
+  line1 = "",
+  line2 = "",
+  city = "",
+  state = "",
+  zipCode = "",
+} = address ?? {};
+
 
   // Line1
   if (!line1?.trim()) {
@@ -370,74 +386,125 @@ export const addressValidation = (address = {}) => {
 };
 // endregion
 
+// region employee code validation
+export const employeeCodeValidation = (code = "") => {
+  if (!code.trim()) return "Employee code is required";
+  if (!EMPLOYEE_CODE_REGEX.test(code.trim()))
+    return "Employee code must be like EMP001";
+  return "";
+};
+// endregion
+
+
+
+// region reporting manager validation (REQUIRED)
+export const reportingManagerValidation = (value = "") => {
+  const val = value.trim();
+
+  if (!val) return "Reporting Manager is required";
+
+  // Format: Name (EMP001)
+  const pattern = /^[A-Za-z ]+\s\((EMP\d{3,})\)$/;
+
+  if (!pattern.test(val)) {
+    return "Format must be: Name (EMP001)";
+  }
+
+  return "";
+};
+// endregion
+
+
+// region salary validation (REQUIRED)
+export const salaryValidation = (value = "") => {
+  const val = String(value).trim();
+
+  if (val === "") return "Salary is required";
+
+  if (!/^\d+$/.test(val)) return "Salary must be a valid number";
+
+  if (Number(val) <= 0) return "Salary must be greater than 0";
+ if (Number(val) >= 100000000) return "Salary must be greater than 100000000";
+  return "";
+};
+// endregion
+
+
+
+// region joining date validation (REQUIRED)
+export const joiningDateValidation = (date = "") => {
+  if (!date) return "Joining date is required";
+
+  // Parse safely as LOCAL date (not UTC)
+  const parts = date.split("-");
+  if (parts.length !== 3) return "Invalid date format";
+
+  const [year, month, day] = parts.map(Number);
+  const selected = new Date(year, month - 1, day);
+
+  if (isNaN(selected.getTime())) return "Invalid date";
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (selected < today) return "Joining date cannot be in the past";
+
+  return "";
+};
+// endregion
+
+
+
 // region full employee validation
 export const validateEmployee = (data = {}, isEdit = false) => {
+  const clean = {
+    ...data,
+    name: data.name?.trim(),
+    email: data.email?.trim(),
+    employeeCode: data.employeeCode?.trim(),
+    reportingManager: data.reportingManager?.trim(),
+    phone: data.phone?.trim(),
+  };
+
   const errors = {};
 
-  // Name
-  if (!data?.name) {
-    errors.name = "Name is required";
-  } else {
-    const nameErr = nameValidation(data?.name ?? "");
-    if (nameErr) {
-      errors.name = nameErr;
-    }
-  }
+  // Basic
+  const nameErr = nameValidation(clean.name);
+  if (nameErr) errors.name = nameErr;
 
-  // Email & password if creating
   if (!isEdit) {
-    if (!data?.email) {
-      errors.email = "Email is required";
-    } else {
-      const emailErr = emailValidation(data?.email ?? "employee", "employee");
-      if (emailErr) {
-        errors.email = emailErr;
-      }
-    }
+    const emailErr = emailValidation(clean.email);
+    if (emailErr) errors.email = emailErr;
 
-    if (!data?.password) {
-      errors.password = "Password is required";
-    } else {
-      const passErr = passwordValidation(data?.password ?? "");
-      if (passErr) {
-        errors.password = passErr;
-      }
+    const passErr = passwordValidation(clean.password);
+    if (passErr) errors.password = passErr;
 
-      if ((data?.confirmPassword ?? "") !== (data?.password ?? "")) {
-        errors.confirmPassword = "Passwords do not match";
-      }
-    }
+    if (clean.password !== clean.confirmPassword)
+      errors.confirmPassword = "Passwords do not match";
+
+    const empErr = employeeCodeValidation(clean.employeeCode);
+    if (empErr) errors.employeeCode = empErr;
   }
 
-  // Department
-  if (!data?.department) {
-    errors.department = "Department is required";
-  } else {
-    const deptErr = departmentValidation(data?.department ?? "");
-    if (deptErr) {
-      errors.department = deptErr;
-    }
-  }
+  const deptErr = departmentValidation(clean.department);
+  if (deptErr) errors.department = deptErr;
 
-  // Phone
-  if (!data?.phone) {
-    errors.phone = "Phone is required";
-  } else {
-    const phoneErr = phoneValidation(data?.phone ?? "");
-    if (phoneErr) {
-      errors.phone = phoneErr;
-    }
-  }
+  const phoneErr = phoneValidation(clean.phone);
+  if (phoneErr) errors.phone = phoneErr;
 
-  // Address
-  if (!data?.address || typeof data?.address !== "object") {
-    errors["address.line1"] = "Address is required";
-  } else {
-    const addrErrors = addressValidation(data?.address ?? {});
-    Object.keys(addrErrors ?? {}).forEach((key) => {
-      errors[`address.${key}`] = addrErrors?.[key];
-    });
-  }
+  const rmErr = reportingManagerValidation(clean.reportingManager);
+  if (rmErr) errors.reportingManager = rmErr;
+
+  const salErr = salaryValidation(clean.salary);
+  if (salErr) errors.salary = salErr;
+
+  const joinErr = joiningDateValidation(clean.joiningDate);
+  if (joinErr) errors.joiningDate = joinErr;
+
+  const addrErrors = addressValidation(clean.address || {});
+  Object.keys(addrErrors).forEach(k => {
+    errors[`address.${k}`] = addrErrors[k];
+  });
 
   return errors;
 };

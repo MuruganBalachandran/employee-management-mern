@@ -83,8 +83,25 @@ const validateCreateEmployee = (data = {}) => {
 
   const { salary, joiningDate, reportingManager, isActive } = data;
 
-  if (salary !== undefined && (typeof salary !== 'number' || salary < 0)) errors.salary = "Salary must be a non-negative number";
-  if (joiningDate !== undefined && isNaN(Date.parse(joiningDate))) errors.joiningDate = "Invalid joining date";
+  if (salary === undefined || salary === null || salary === "")
+  errors.salary = "Salary is required";
+else if (isNaN(salary))
+  errors.salary = "Salary must be a number";
+else if (Number(salary) <= 0)
+  errors.salary = "Salary must be greater than 0";
+
+if (!joiningDate) {
+  errors.joiningDate = "Joining date is required";
+} else {
+  const date = new Date(joiningDate);
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  date.setHours(0,0,0,0);
+
+  if (isNaN(date.getTime())) errors.joiningDate = "Invalid date";
+  else if (date < today) errors.joiningDate = "Joining date cannot be in the past";
+}
+
   // reportingManager is optional, no validation needed (just a string ID)
   if (isActive !== undefined && ![0, 1].includes(isActive)) errors.isActive = "Is Active must be 0 or 1";
 
@@ -100,7 +117,7 @@ const validateCreateEmployee = (data = {}) => {
 const validateUpdateEmployee = (data = {}) => {
   const errors = {};
 
-  const { name, age, department, phone, address } = data || {};
+  const { name, age, department, phone, address,salary, reportingManager, joiningDate, employeeCode } = data || {};
 
   if (name !== undefined) {
     const nameError = validateName(name);
@@ -136,6 +153,22 @@ const validateUpdateEmployee = (data = {}) => {
       errors.address = addressError;
     }
   }
+
+  if (salary !== undefined) {
+  if (isNaN(salary) || Number(salary) <= 0)
+    errors.salary = "Salary must be greater than 0";
+}
+
+if (joiningDate !== undefined) {
+  const date = new Date(joiningDate);
+  if (isNaN(date.getTime())) errors.joiningDate = "Invalid joining date";
+}
+
+if (reportingManager !== undefined && !validateObjectId(reportingManager))
+  errors.reportingManager = "Invalid reporting manager ID";
+
+if (employeeCode !== undefined && employeeCode.trim() === "")
+  errors.employeeCode = "Employee code cannot be empty";
 
 
   if (Object.keys(errors).length > 0) {
